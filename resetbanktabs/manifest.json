@@ -1,0 +1,6 @@
+{
+  "namespace": "indexc_banker",
+  "icon": "icon.png",
+  "setup": "setup.mjs",
+  "load": ["templates.html"]
+}

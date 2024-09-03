@@ -1,5 +1,0 @@
-{
-  "namespace": "indexc_bank_reset",
-  "icon": "icon.png",
-  "setup": "setup.mjs"
-}
