@@ -144,7 +144,7 @@ export function setup(ctx) {
                     && isBasicUnlockedAndSameRealm;
             } else if (skillName === 'mining') {
                 return  game[skillName].canMineOre(action)
-                    && !action.isRespawning
+                    && action.currentHP !== 0
                     && action.realm === game[skillName].currentRealm;
             } else if (skillName === 'thieving') {
                 const maxHit = Math.floor(numberMultiplier * action.maxHit * (1 - game.combat.player.equipmentStats.damageReduction / 100));

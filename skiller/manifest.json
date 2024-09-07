@@ -1,5 +1,6 @@
 {
   "namespace": "indexc",
   "icon": "icon.png",
-  "setup": "setup.mjs"
+  "setup": "setup.mjs",
+  "version": "0.1.2"
 }
