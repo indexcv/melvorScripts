@@ -7,6 +7,8 @@ export function setup(ctx) {
             custom: {id: 'custom', description: 'Custom priority', tooltip: 'Drag items to change their priority<br>Click items to disable/enable them'},
             mastery: {id: 'mastery', description: 'Highest mastery', tooltip: 'Items with maxed mastery are excluded<br>Click items to disable/enable them'},
             masteryLow: {id: 'masteryLow', description: 'Lowest mastery', tooltip: 'In case you wanted to work on Mastery from the other direction<br>Click items to disable/enable them'},
+            intensity:{id: 'intensity', description: 'Highest intensity', tooltip: 'Items with maxed intensity are excluded<br>Click items to disable/enable them'},
+            intensityLow:{id: 'intensityLow', description: 'Lowest intensity', tooltip: 'In case you wanted to work on Intensity from the other direction<br>Click items to disable/enable them'},
             lowestQuantity: {id: 'lowestQuantity', description: 'Lowest Quantity', tooltip: 'Items whatever you have the least of in your bank<br>Click items to disable/enable them'},
             bestXP: {id: 'bestXP', description: 'Best XP/Hr', tooltip: 'Target whatever gives the best XP/Hour.<br>Click items to disable/enable them'}
         };
@@ -16,18 +18,19 @@ export function setup(ctx) {
         //mastery skills:  altMagic, woodcutting, fishing, firemaking, cooking, mining, smithing, thieving, farming, fletching, crafting, runecrafting,
         //                 herblore, agility, summoning, astrology, archaeology
         const SKILLS = [
-            {id: 'woodcutting', name: 'Woodcutting', hasOwnPatch: true, includeQuantity: true, returnMultiple: true},
-            {id: 'fishing', name: 'Fishing', hasOwnPatch: true, includeQuantity: true, returnMultiple: false},
-            {id: 'firemaking', name: 'Firemaking', hasOwnPatch: true, includeQuantity: false, returnMultiple: false},
-            {id: 'cooking', name: 'Cooking', hasOwnPatch: true, includeQuantity: true, returnMultiple: false},
-            {id: 'mining', name: 'Mining', hasOwnPatch: true, includeQuantity: true, returnMultiple: false},
-            {id: 'smithing', name: 'Smithing', hasOwnPatch: false, includeQuantity: true, returnMultiple: false},
-            {id: 'thieving', name: 'Thieving', hasOwnPatch: true, includeQuantity: false, returnMultiple: false},
-            {id: 'fletching', name: 'Fletching', hasOwnPatch: false, includeQuantity: true, returnMultiple: false},
-            {id: 'crafting', name: 'Crafting', hasOwnPatch: false, includeQuantity: true, returnMultiple: false},
-            {id: 'runecrafting', name: 'Runecrafting', hasOwnPatch: false, includeQuantity: true, returnMultiple: false},
-            {id: 'herblore', name: 'Herblore', hasOwnPatch: false, includeQuantity: true, returnMultiple: false},
-            {id: 'astrology', name: 'Astrology', hasOwnPatch: true, includeQuantity: false, returnMultiple: false}
+            {id: 'woodcutting', name: 'Woodcutting', hasOwnPatch: true, includeQuantity: true, returnMultiple: true, hasMastery: true, hasIntensity: false},
+            {id: 'fishing', name: 'Fishing', hasOwnPatch: true, includeQuantity: true, returnMultiple: false, hasMastery: true, hasIntensity: false},
+            {id: 'firemaking', name: 'Firemaking', hasOwnPatch: true, includeQuantity: false, returnMultiple: false, hasMastery: true, hasIntensity: false},
+            {id: 'cooking', name: 'Cooking', hasOwnPatch: true, includeQuantity: true, returnMultiple: false, hasMastery: true, hasIntensity: false},
+            {id: 'mining', name: 'Mining', hasOwnPatch: true, includeQuantity: true, returnMultiple: false, hasMastery: true, hasIntensity: false},
+            {id: 'smithing', name: 'Smithing', hasOwnPatch: false, includeQuantity: true, returnMultiple: false, hasMastery: true, hasIntensity: false},
+            {id: 'thieving', name: 'Thieving', hasOwnPatch: true, includeQuantity: false, returnMultiple: false, hasMastery: true, hasIntensity: false},
+            {id: 'fletching', name: 'Fletching', hasOwnPatch: false, includeQuantity: true, returnMultiple: false, hasMastery: true, hasIntensity: false},
+            {id: 'crafting', name: 'Crafting', hasOwnPatch: false, includeQuantity: true, returnMultiple: false, hasMastery: true, hasIntensity: false},
+            {id: 'runecrafting', name: 'Runecrafting', hasOwnPatch: false, includeQuantity: true, returnMultiple: false, hasMastery: true, hasIntensity: false},
+            {id: 'herblore', name: 'Herblore', hasOwnPatch: false, includeQuantity: true, returnMultiple: false, hasMastery: true, hasIntensity: false},
+            {id: 'astrology', name: 'Astrology', hasOwnPatch: true, includeQuantity: false, returnMultiple: false, hasMastery: true, hasIntensity: false},
+            {id: 'harvesting', name: 'Harvesting', hasOwnPatch: true, includeQuantity: false, returnMultiple: false, hasMastery: true, hasIntensity: true},
         ];
 
         const PRIORITY_ARRAYS = {};
@@ -51,6 +54,7 @@ export function setup(ctx) {
                 enabled: false,
                 collapsed: false,
                 masteryDone: false,
+                intensityDone: false,
                 priorityType: priorityTypes.custom.id,
                 priority: priorityToConfig(skill.id, PRIORITY_ARRAYS[skill.id]),
                 disabledActions: {}
@@ -77,8 +81,11 @@ export function setup(ctx) {
                 if (!config[skill.id].disabledActions) {
                     config[skill.id].disabledActions = {}
                 }
-                if (!config[skill.id].masteryDone) {
+                if (skill.hasMastery && !config[skill.id].masteryDone) {
                     config[skill.id].masteryDone = game[skill.id].actions.filter(thisAction => getMasteryLevel(skill.id, thisAction) < 99).length === 0;
+                }
+                if (skill.hasIntensity && !config[skill.id].intensityDone) {
+                    config[skill.id].intensityDone = game[skill.id].actions.filter(thisAction => thisAction.intensityPercent < 100).length === 0;
                 }
             })
 
@@ -93,7 +100,9 @@ export function setup(ctx) {
         const getMasteryLevel = (skillName, action) => game[skillName].getMasteryLevel(action);
         const getMasteryXP = (skillName, action) => game[skillName].getMasteryXP(action);
         const getXPRate = (skillName, action) => {
-            const XP = game[skillName].modifyXP(action.baseExperience)
+            const XP = game[skillName].currentRealm.id === 'melvorD:Melvor'
+                ? game[skillName].modifyXP(action.baseExperience)
+                : game[skillName].modifyAbyssalXP(action.baseAbyssalExperience);
 
             if (skillName === 'woodcutting') {
                 return XP / game[skillName].getTreeInterval(action);
@@ -153,6 +162,9 @@ export function setup(ctx) {
                     && isBasicUnlockedAndSameRealm;
             } else if (skillName === 'astrology') {
                 return isBasicUnlockedAndSameRealm;
+            } else if (skillName === 'harvesting') {
+                return game[skillName].canHarvestVein(action)
+                    && action.realm === game[skillName].currentRealm;
             }
 
             return game[skillName].getRecipeCosts(action).checkIfOwned() && isBasicUnlockedAndSameRealm;
@@ -188,6 +200,14 @@ export function setup(ctx) {
                     .sort((a, b) => getXPRate(skillName, b) - getXPRate(skillName, a));
             } else if (priorityType === priorityTypes.custom.id) {
                 actions = PRIORITY_ARRAYS[skillName].filter(thisAction => thisAction.realm === game[skillName].currentRealm && !config[skillName].disabledActions[thisAction.id] && checkAction(skillName, thisAction));
+            } else if (priorityType === priorityTypes.intensity.id) {
+                actions = game[skillName].actions
+                    .filter(thisAction => thisAction.realm === game[skillName].currentRealm && !config[skillName].disabledActions[thisAction.id] && checkAction(skillName, thisAction) && thisAction.intensityPercent < 100)
+                    .sort((a, b) => b.intensityPercent - a.intensityPercent);
+            } else if (priorityType === priorityTypes.intensityLow.id) {
+                actions = game[skillName].actions
+                    .filter(thisAction => thisAction.realm === game[skillName].currentRealm && !config[skillName].disabledActions[thisAction.id] && checkAction(skillName, thisAction) && thisAction.intensityPercent < 100)
+                    .sort((a, b) => a.intensityPercent - b.intensityPercent);
             }
 
             if (skill.returnMultiple) {
@@ -275,6 +295,14 @@ export function setup(ctx) {
                         }
 
                         actCheckCount = 0;
+                    } else if (skillName === 'harvesting' && actCheckCount >= checkThresh) {
+                        const bestAction = getBestAction(skill);
+
+                        if (bestAction !== undefined && game[skillName].activeVein.id !== bestAction.id) {
+                            game[skillName].onVeinClick(bestAction);
+                        }
+
+                        actCheckCount = 0;
                     } else if (!skill.hasOwnPatch && (checkAction(skillName, game[skillName].activeRecipe) || actCheckCount >= checkThresh)) {
                         const bestAction = getBestAction(skill);
 
@@ -359,6 +387,36 @@ export function setup(ctx) {
 
             menu.append(sortedMenuItems);
         };
+        const orderIntensityPriorityMenu = (skillName) => {
+            const menu = $(`#${id}-${skillName}-prioritysettings-intensity`);
+
+            menu.children()
+                .toArray()
+                .filter((e) => getAction(skillName, $(e).data('action')).intensityPercent >= 100)
+                .forEach((e) => $(e).remove());
+
+            const sortedMenuItems = menu
+                .children()
+                .toArray()
+                .sort((a, b) => getAction(skillName, $(b).data('action')).intensityPercent - getAction(skillName, $(a).data('action')).intensityPercent);
+
+            menu.append(sortedMenuItems);
+        };
+        const orderIntensityLowPriorityMenu = (skillName) => {
+            const menu = $(`#${id}-${skillName}-prioritysettings-intensityLow`);
+
+            menu.children()
+                .toArray()
+                .filter((e) => getAction(skillName, $(e).data('action')).intensityPercent >= 100)
+                .forEach((e) => $(e).remove());
+
+            const sortedMenuItems = menu
+                .children()
+                .toArray()
+                .sort((a, b) => getAction(skillName, $(a).data('action')).intensityPercent - getAction(skillName, $(b).data('action')).intensityPercent);
+
+            menu.append(sortedMenuItems);
+        };
 
         const injectSkillGUI = (skill) => {
             const skillID = `${id}-${skill.id}`;
@@ -371,7 +429,8 @@ export function setup(ctx) {
                 return  priorityType === priorityTypes.custom
                     || priorityType === priorityTypes.bestXP
                     || (priorityType === priorityTypes.lowestQuantity && skill.includeQuantity)
-                    || (!config[skillName].masteryDone && (priorityType === priorityTypes.mastery || priorityType === priorityTypes.masteryLow));
+                    || (skill.hasMastery && !config[skillName].masteryDone && (priorityType === priorityTypes.mastery || priorityType === priorityTypes.masteryLow))
+                    || (skill.hasIntensity && !config[skillName].intensityDone && (priorityType === priorityTypes.intensity || priorityType === priorityTypes.intensityLow));
             }
             function createActionDiv(action) {
                 let product = getProduct(skillName, action);
@@ -547,9 +606,13 @@ export function setup(ctx) {
             });
 
             orderCustomPriorityMenu(skillName);
-            if (!config[skillName].masteryDone) {
+            if (skill.hasMastery && !config[skillName].masteryDone) {
                 orderMasteryPriorityMenu(skillName);
                 orderMasteryLowPriorityMenu(skillName);
+            }
+            if (skill.hasIntensity && !config[skillName].intensityDone) {
+                orderIntensityPriorityMenu(skillName);
+                orderIntensityLowPriorityMenu(skillName);
             }
             if (skill.includeQuantity) {
                 orderQuantityPriorityMenu(skillName);
@@ -588,6 +651,7 @@ export function setup(ctx) {
             ctx.patch(Runecrafting, 'postAction').after(function(){ patchSkill('runecrafting') });
             ctx.patch(Herblore, 'postAction').after(function(){ patchSkill('herblore') });
             ctx.patch(Astrology, 'postAction').after(function(){ patchSkill('astrology') });
+            ctx.patch(Harvesting, 'postAction').after(function(){ patchSkill('harvesting') });
 
             console.log(`${title} patched!`);
         });
