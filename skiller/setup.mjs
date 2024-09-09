@@ -3,6 +3,13 @@ export function setup(ctx) {
         const id = 'skiller';
         const title = "Skiller";
 
+        // const hasTotH = cloudManager.hasTotHEntitlementAndIsEnabled;
+        // const hasAoD = cloudManager.hasAoDEntitlementAndIsEnabled;
+        const hasItA = cloudManager.hasItAEntitlementAndIsEnabled;
+        // const melvorRealm = game.realms.getObjectByID('melvorD:Melvor');
+        // const abyssalRealm = hasItA && game.realms.getObjectByID('melvorItA:Abyssal');
+        // const eternalRealm = hasItA && game.realms.getObjectByID('melvorItA:Eternal');
+
         const priorityTypes = {
             custom: {id: 'custom', description: 'Custom priority', tooltip: 'Drag items to change their priority<br>Click items to disable/enable them'},
             mastery: {id: 'mastery', description: 'Highest mastery', tooltip: 'Items with maxed mastery are excluded<br>Click items to disable/enable them'},
@@ -46,18 +53,21 @@ export function setup(ctx) {
 
         //init Array's
         SKILLS.forEach(skill => {
-            SKILL_ACTIONS[skill.id] = game[skill.id].actions.allObjects.sort((a, b) => b.level - a.level);
-            PRIORITY_ARRAYS[skill.id] = [...SKILL_ACTIONS[skill.id]];
+            if (!hasItA && skill.id === 'harvesting') {}
+            else {
+                SKILL_ACTIONS[skill.id] = game[skill.id].actions.allObjects.sort((a, b) => b.level - a.level);
+                PRIORITY_ARRAYS[skill.id] = [...SKILL_ACTIONS[skill.id]];
 
-            config[skill.id] = {
-                // visible: true,
-                enabled: false,
-                collapsed: false,
-                masteryDone: false,
-                intensityDone: false,
-                priorityType: priorityTypes.custom.id,
-                priority: priorityToConfig(skill.id, PRIORITY_ARRAYS[skill.id]),
-                disabledActions: {}
+                config[skill.id] = {
+                    // visible: true,
+                    enabled: false,
+                    collapsed: false,
+                    masteryDone: false,
+                    intensityDone: false,
+                    priorityType: priorityTypes.custom.id,
+                    priority: priorityToConfig(skill.id, PRIORITY_ARRAYS[skill.id]),
+                    disabledActions: {}
+                }
             }
         });
 
@@ -75,19 +85,22 @@ export function setup(ctx) {
             config = {...config, ...storedConfig};
 
             SKILLS.forEach(skill => {
-                if (config[skill.id] && config[skill.id].priority) {
-                    PRIORITY_ARRAYS[skill.id] = priorityFromConfig(skill.id, config[skill.id].priority);
+                if (!hasItA && skill.id === 'harvesting') {}
+                else {
+                    if (config[skill.id] && config[skill.id].priority) {
+                        PRIORITY_ARRAYS[skill.id] = priorityFromConfig(skill.id, config[skill.id].priority);
+                    }
+                    if (!config[skill.id].disabledActions) {
+                        config[skill.id].disabledActions = {}
+                    }
+                    if (skill.hasMastery && !config[skill.id].masteryDone) {
+                        config[skill.id].masteryDone = game[skill.id].actions.filter(thisAction => getMasteryLevel(skill.id, thisAction) < 99).length === 0;
+                    }
+                    if (skill.hasIntensity && !config[skill.id].intensityDone) {
+                        config[skill.id].intensityDone = game[skill.id].actions.filter(thisAction => thisAction.intensityPercent < 100).length === 0;
+                    }
                 }
-                if (!config[skill.id].disabledActions) {
-                    config[skill.id].disabledActions = {}
-                }
-                if (skill.hasMastery && !config[skill.id].masteryDone) {
-                    config[skill.id].masteryDone = game[skill.id].actions.filter(thisAction => getMasteryLevel(skill.id, thisAction) < 99).length === 0;
-                }
-                if (skill.hasIntensity && !config[skill.id].intensityDone) {
-                    config[skill.id].intensityDone = game[skill.id].actions.filter(thisAction => thisAction.intensityPercent < 100).length === 0;
-                }
-            })
+            });
 
             if (config.hasOwnProperty('disabledActions')) {
                 delete config.disabledActions;
@@ -631,7 +644,10 @@ export function setup(ctx) {
 
         const injectGUI = () => {
             SKILLS.forEach(skill => {
-                injectSkillGUI(skill);
+                if (!hasItA && skill.id === 'harvesting'){}
+                else {
+                    injectSkillGUI(skill);
+                }
             })
         }
 
@@ -651,7 +667,9 @@ export function setup(ctx) {
             ctx.patch(Runecrafting, 'postAction').after(function(){ patchSkill('runecrafting') });
             ctx.patch(Herblore, 'postAction').after(function(){ patchSkill('herblore') });
             ctx.patch(Astrology, 'postAction').after(function(){ patchSkill('astrology') });
-            ctx.patch(Harvesting, 'postAction').after(function(){ patchSkill('harvesting') });
+            if (hasItA) {
+                ctx.patch(Harvesting, 'postAction').after(function(){ patchSkill('harvesting') });
+            }
 
             console.log(`${title} patched!`);
         });
