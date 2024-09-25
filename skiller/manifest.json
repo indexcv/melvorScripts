@@ -1,6 +1,8 @@
 {
-  "namespace": "indexc",
-  "icon": "icon.png",
+  "name": "Skiller",
+  "namespace": "indexc_skiller",
+  "version": "0.3.0",
   "setup": "setup.mjs",
-  "version": "0.2.2"
+  "icon": "icon.png",
+  "load": ["template.html"]
 }

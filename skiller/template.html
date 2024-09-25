@@ -1,0 +1,62 @@
+<template id="skillerRoot">
+  <div :id="'skiller-' + skillId" class="row row-deck" @vue:mounted="mounted(skillId)">
+    <div :id="'skiller-' + skillId + '-inner'" class="col-12">
+      <div :class="'block block-rounded block-link-pop border-top border-4x border-' + skillId"
+           style="padding-bottom: 12px">
+        <div class="block-header border-bottom">
+          <h3 class="block-title">Auto {{store.findSkill(skillId).name}}</h3>
+          <div class="custom-control custom-switch">
+            <input @click="store.setEnabled(skillId, $el.checked)" type="checkbox"
+                   class="custom-control-input" :id="skillId + '-enabled'" :name="skillId + '-enabled'"
+                   :checked="store.config[skillId].enabled">
+            <label class="custom-control-label" :for="skillId + '-enabled'">Enable</label>
+          </div>
+          <div class="custom-control custom-switch" style="margin-left:20px">
+            <input @click="store.setCollapsed(skillId, $el.checked)" type="checkbox"
+                   class="custom-control-input" :id="skillId + '-collapsed'" :name="skillId + '-collapsed'"
+                   :checked="store.config[skillId].collapsed">
+            <label class="custom-control-label" :for="skillId + '-collapsed'">Collapse</label>
+          </div>
+          <div class="custom-control">
+            <button @click="store.skillConfigReset(skillId)" class="btn btn-sm btn-danger"
+                    :id="skillId + '-config-reset'"
+                    :data-tippy-content="'Reset ' + skillId + ' settings to default<br><br><dl><dt>Priority type</dt><dd>- Custom priority</dd><dt>Custom priority order</dt><dd>- highest to lowest level</dd><dt>Disabled items</dt><dd>- all enabled</dd></dl>'">
+              <i class="fas fa-fw fa-cog"></i></button>
+          </div>
+        </div>
+        <div class="block-content" style="padding-top: 12px" v-show="!store.config[skillId].collapsed">
+          <div class="custom-control custom-radio custom-control-inline"
+               :data-tippy-content="priorityType.tooltip"
+               v-for="priorityType in store.getPriorityTypes(skillId)">
+            <input @click="store.setPriorityType(skillId, priorityType.id)" class="custom-control-input"
+                   type="radio" :id="skillId + '-prioritytype-' + priorityType.id"
+                   :name="skillId + '-prioritytype'" :value="priorityType.id"
+                   :checked="priorityType.id === store.config[skillId].priorityType">
+            <label class="custom-control-label" :for="skillId + '-prioritytype-' + priorityType.id">{{priorityType.description}}</label>
+          </div>
+        </div>
+        <div class="block-content" style="padding-top: 12px" v-show="!store.config[skillId].collapsed">
+          <div :id="skillId + '-prioritySettings'" :class="skillId + '-action-toggles'">
+            <div @click="store.setDisableItem(skillId, actionItem.idx)"
+                 :id="skillId + '-actionItem-' + actionItem.idx"
+                 :class="'btn btn-outline-secondary' + skillId + '-priority-selector'"
+                 :data-id="actionItem.idx" :data-tippy-content="actionItem.action.name"
+                 style="margin: 2px; padding: 6px; float: left;"
+                 v-for="actionItem in store.getActions(skillId)">
+              <img :src="store.getMedia(skillId, actionItem.action)" width="30" height="30"/>
+            </div>
+          </div>
+          <button @click="store.priorityReset(skillId)" :id="skillId +'-prioritysettings-reset'"
+                  class="btn btn-primary locked"
+                  data-tippy-content="Reset order to default (highest to lowest level)"
+                  style="margin: 5px 0 0 2px; float: right;"
+                  v-show="store.config[skillId].priorityType === store.customPriorityType.id">Reset
+          </button>
+        </div>
+        <div class="block-content d-flex" v-if="store.skillerDebug">
+          {{store.config[skillId]}}
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
