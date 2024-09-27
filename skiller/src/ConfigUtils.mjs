@@ -45,12 +45,13 @@ async function loadConfig() {
     let storedConfig = characterStorage.getItem('config');
 
     if (!storedConfig) {
+        // console.log('skiller - loadConfig no stored config');
         return config;
     }
 
     //config has changes so much object -> compressed base64, need to clear stored config and start over
     if (storedConfig.version !== configVersion) {
-        console.log('stored config version did not match current config version, removing stored config', storedConfig.version, configVersion);
+        console.warn('[Skiller] - stored config version did not match current config version, removing stored config', storedConfig.version, configVersion);
         characterStorage.removeItem('config');
         return config;
     }
@@ -58,18 +59,7 @@ async function loadConfig() {
     storedConfig = JSON.parse(await decompress(storedConfig.config, 'gzip'));
     config = {...config, ...storedConfig};
 
-    SKILLS.forEach(skill => {
-        if (!hasItA && skill.id === 'harvesting' || !config[skill.id]) {}
-        else {
-            if (skill.hasMastery && !config[skill.id].masteryDone) {
-                config[skill.id].masteryDone = game[skill.id].actions.filter(thisAction => getMasteryLevel(skill.id, thisAction) < 99).length === 0;
-            }
-            if (skill.hasIntensity && !config[skill.id].intensityDone) {
-                config[skill.id].intensityDone = game[skill.id].actions.filter(thisAction => thisAction.intensityPercent < 100).length === 0;
-            }
-        }
-    });
-
+    // console.log('skiller - loadConfig', config);
     return config;
 }
 
@@ -77,42 +67,53 @@ function initConfig() {
     let config = {}
 
     SKILLS.forEach(skill => {
-        if (!hasItA && skill.id === 'harvesting') {}
-        else {
-            SKILL_ACTIONS[skill.id] = game[skill.id].actions.allObjects.map((a, idx) => {
-                return {'idx': idx, 'action': a};
-            }).sort((a, b) => {
-                let aLevel = a.action.realm.id === abyssalRealm.id ? a.action.abyssalLevel + 1000 : a.action.realm.id === eternalRealm.id ? 3000 : a.action.level;
-                let bLevel = b.action.realm.id === abyssalRealm.id ? b.action.abyssalLevel + 1000 : b.action.realm.id === eternalRealm.id ? 3000 : b.action.level;
+        if (!hasItA && skill.id === 'harvesting') {
+            return
+        }
 
-                return aLevel - bLevel
+        SKILL_ACTIONS[skill.id] = {};
+        let tmpActions = game[skill.id].actions.allObjects.map((a, idx) => {
+            return {'idx': idx, 'action': a};
+        });
+
+        config[skill.id] = {
+            enabled: false,
+            collapsed: false,
+            //FIXME: add realm selection, and use this in bestAction
+            selectedRealm: skill.id === 'harvesting' ? abyssalRealm.id : melvorRealm.id,
+            priorityType: priorityTypes.custom.id
+        };
+
+        game.realms.allObjects.forEach(realm => {
+            let actions = tmpActions.filter(a => a.action.realm.id === realm.id);
+            if (actions.length < 1) {
+                return
+            }
+
+            SKILL_ACTIONS[skill.id][realm.id] = actions.sort((a, b) => {
+                return realm.id === abyssalRealm.id
+                    ? a.action.abyssalLevel - b.action.abyssalLevel
+                    : a.action.level - b.action.level;
             });
 
-            config[skill.id] = {
-                enabled: false,
-                collapsed: false,
-                //FIXME: add realm selection, and use this in bestAction
-                selectedRealm: skill.id === 'harvesting' ? abyssalRealm.id : melvorRealm.id,
-                priorityType: priorityTypes.custom.id,
-                priority: {},
-                disabledActions: {}
+            let tmpConf = {
+                priority: actions.map(a => a.idx),
+                disabledActions: []
             }
-
-            config[skill.id].priority[melvorRealm.id] = SKILL_ACTIONS[skill.id].filter(a => a.action.realm.id === melvorRealm.id).map(a => a.idx);
-            config[skill.id].priority[abyssalRealm.id] = SKILL_ACTIONS[skill.id].filter(a => a.action.realm.id !== melvorRealm.id).map(a => a.idx);
-
-            config[skill.id].disabledActions[melvorRealm.id] = [];
-            config[skill.id].disabledActions[abyssalRealm.id] = [];
 
             if (skill.hasMastery) {
-                config[skill.id].masteryDone = false;
+                tmpConf.masteryDone = game[skill.id].actions.filter(thisAction => thisAction.realm.id === realm.id && getMasteryLevel(skill.id, thisAction) < 99).length === 0;
             }
             if (skill.hasIntensity) {
-                config[skill.id].intensityDone = false;
+                tmpConf.intensityDone = game[skill.id].actions.filter(thisAction => thisAction.realm.id === realm.id && thisAction.intensityPercent < 100).length === 0;
             }
-        }
+
+            config[skill.id][realm.id] = tmpConf;
+        });
+
     });
 
+    // console.log('skiller - initConfig', config);
     return config;
 }
 

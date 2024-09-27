@@ -1,6 +1,8 @@
-.idea
-/otherMods
-/MelvorGame
-melvor-scripts.js
+.idea/
+/otherMods/
+/MelvorGame/
+/releases/
+/petiteVue/
 
-/releases
+melvor-scripts.js
+*.zip

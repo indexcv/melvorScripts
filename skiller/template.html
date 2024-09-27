@@ -20,7 +20,7 @@
           <div class="custom-control">
             <button @click="store.skillConfigReset(skillId)" class="btn btn-sm btn-danger"
                     :id="skillId + '-config-reset'"
-                    :data-tippy-content="'Reset ' + skillId + ' settings to default<br><br><dl><dt>Priority type</dt><dd>- Custom priority</dd><dt>Custom priority order</dt><dd>- highest to lowest level</dd><dt>Disabled items</dt><dd>- all enabled</dd></dl>'">
+                    :data-tippy-content="'Reset ' + skillId + ' settings to default in all realms<br><br><dl><dt>Priority type</dt><dd>- Custom priority</dd><dt>Custom priority order</dt><dd>- highest to lowest level</dd><dt>Disabled items</dt><dd>- all enabled</dd></dl>'">
               <i class="fas fa-fw fa-cog"></i></button>
           </div>
         </div>
@@ -36,7 +36,7 @@
           </div>
         </div>
         <div class="block-content" style="padding-top: 12px" v-show="!store.config[skillId].collapsed">
-          <div :id="skillId + '-prioritySettings'" :class="skillId + '-action-toggles'">
+          <div :id="skillId + '-prioritySettings' - store.config[skillId].priorityType" :class="skillId + '-action-toggles'">
             <div @click="store.setDisableItem(skillId, actionItem.idx)"
                  :id="skillId + '-actionItem-' + actionItem.idx"
                  :class="'btn btn-outline-secondary' + skillId + '-priority-selector'"
