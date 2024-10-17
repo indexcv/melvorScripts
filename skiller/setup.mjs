@@ -66,41 +66,33 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
             getActions(skillId) {
                 let priorityType = skillerStore.config[skillId].priorityType;
                 let selectedRealm = skillerStore.config[skillId].selectedRealm;
+                let retArray = [...SKILL_ACTIONS[skillId][selectedRealm]];
                 if (priorityType === priorityTypes.mastery.id) {
-                    return SKILL_ACTIONS[skillId][selectedRealm]
-                        .filter(a => getMasteryLevel(skillId, getAction(skillId, a.action.id)))
+                    return retArray.filter(a => getMasteryLevel(skillId, getAction(skillId, a.action.id)))
                         .sort((a, b) => getMasteryXP(skillId, getAction(skillId, b.action.id)) - getMasteryXP(skillId, getAction(skillId, a.action.id)));
                 } else if (priorityType === priorityTypes.masteryLow.id) {
-                    return SKILL_ACTIONS[skillId][selectedRealm]
-                        .filter(a => getMasteryLevel(skillId, getAction(skillId, a.action.id)))
+                    return retArray.filter(a => getMasteryLevel(skillId, getAction(skillId, a.action.id)))
                         .sort((a, b) => getMasteryXP(skillId, getAction(skillId, a.action.id)) - getMasteryXP(skillId, getAction(skillId, b.action.id)));
                 } else if (priorityType === priorityTypes.intensity.id) {
-                    return SKILL_ACTIONS[skillId][selectedRealm]
-                        .filter(a => getAction(skillId, a.action.id).intensityPercent < 100)
+                    return retArray.filter(a => getAction(skillId, a.action.id).intensityPercent < 100)
                         .sort((a, b) => getAction(skillId, b.action.id).intensityPercent - getAction(skillId, a.action.id).intensityPercent);
                 } else if (priorityType === priorityTypes.intensityLow.id) {
-                    return SKILL_ACTIONS[skillId][selectedRealm]
-                        .filter(a => getAction(skillId, a.action.id).intensityPercent < 100)
+                    return retArray.filter(a => getAction(skillId, a.action.id).intensityPercent < 100)
                         .sort((a, b) => getAction(skillId, a.action.id).intensityPercent - getAction(skillId, b.action.id).intensityPercent);
                 } else if (priorityType === priorityTypes.lowestQuantity.id) {
-                    return SKILL_ACTIONS[skillId][selectedRealm]
-                        .sort((a, b) => bankQty(getProduct(skillId, a.action)) - bankQty(getProduct(skillId, b.action)));
+                    return retArray.sort((a, b) => bankQty(getProduct(skillId, a.action)) - bankQty(getProduct(skillId, b.action)));
                 } else if (priorityType === priorityTypes.bestXP.id) {
-                    return SKILL_ACTIONS[skillId][selectedRealm]
-                        .sort((a, b) => getXPRate(skillId, getAction(skillId, b.action.id)) - getXPRate(skillId, getAction(skillId, a.action.id)));
+                    return retArray.sort((a, b) => getXPRate(skillId, getAction(skillId, b.action.id)) - getXPRate(skillId, getAction(skillId, a.action.id)));
                 } else if (priorityType === priorityTypes.sellsFor.id) {
                     if (skillId === 'thieving') {
-                        return SKILL_ACTIONS[skillId][selectedRealm]
-                            .sort((a, b) => b.action.currencyDrops[0].quantity - a.action.currencyDrops[0].quantity);
+                        return retArray.sort((a, b) => b.action.currencyDrops[0].quantity - a.action.currencyDrops[0].quantity);
                     } else if (skillId === 'herblore') {
-                        return SKILL_ACTIONS[skillId][selectedRealm]
-                            .sort((a, b) => b.action.potions[3].sellsFor.quantity - a.action.potions[3].sellsFor.quantity);
+                        return retArray.sort((a, b) => b.action.potions[3].sellsFor.quantity - a.action.potions[3].sellsFor.quantity);
                     } else {
-                        return SKILL_ACTIONS[skillId][selectedRealm]
-                            .sort((a, b) => b.action.product.sellsFor.quantity - a.action.product.sellsFor.quantity);
+                        return retArray.sort((a, b) => b.action.product.sellsFor.quantity - a.action.product.sellsFor.quantity);
                     }
                 } else {
-                    return SKILL_ACTIONS[skillId][selectedRealm];
+                    return retArray;
                 }
             },
             getPriorityTypes(skillId) {
@@ -161,7 +153,7 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
             },
             async priorityReset(skillId) {
                 let selectedRealm = skillerStore.config[skillId].selectedRealm;
-                skillerStore.config[skillId][selectedRealm].priority = SKILL_ACTIONS[skillId][selectedRealm].map(a => a.idx);
+                skillerStore.config[skillId][selectedRealm].priority = [...SKILL_ACTIONS[skillId][selectedRealm].map(a => a.idx)];
                 events.emit('skillerSetPriorityType', {skillId: skillId, priorityType: priorityTypes.custom.id});
                 await storeConfig(skillerStore.config);
             },
@@ -171,7 +163,7 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                     if (!SKILL_ACTIONS[skillId][realm.id]) {
                         return
                     }
-                    skillerStore.config[skillId][realm.id].priority = SKILL_ACTIONS[skillId][realm.id].map(a => a.idx);
+                    skillerStore.config[skillId][realm.id].priority = [...SKILL_ACTIONS[skillId][realm.id].map(a => a.idx)];
                     skillerStore.config[skillId][realm.id].disabledActions = [];
                 });
                 events.emit('skillerSetPriorityType', {skillId: skillId, priorityType: priorityTypes.custom.id});
