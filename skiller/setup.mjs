@@ -251,4 +251,14 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
         const t1 = performance.now();
         console.log(`%c[Skiller] GUI | Loading took ${t1 - t0}ms`, 'color: #03a9fc');
     });
+
+    onCharacterLoaded(async () => {
+        const t0 = performance.now();
+        window.skillerMod['config'] = await loadConfig();
+
+        await loadModule('src/Patching.mjs');
+
+        const t1 = performance.now();
+        console.log(`%c[Skiller] Patching | Loading took ${t1 - t0}ms`, 'color: #03a9fc');
+    });
 }
