@@ -174,9 +174,6 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                     skillerStore.config[skillId][realm.id].priority = SKILL_ACTIONS[skillId][realm.id].map(a => a.idx);
                     skillerStore.config[skillId][realm.id].disabledActions = [];
                 });
-                $(`.${skillId}-action-toggles div`).each((_, e) => {
-                    $(e).css('opacity', 1);
-                });
                 events.emit('skillerSetPriorityType', {skillId: skillId, priorityType: priorityTypes.custom.id});
                 await storeConfig(skillerStore.config);
             },
@@ -184,10 +181,12 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
         skillerMod['store'] = skillerStore;
 
         events.on('skillerSetPriorityType', value => {
-            let skillId = value.skillId
+            let skillId = value.skillId;
+            let selectedRealm = skillerStore.config[skillId].selectedRealm;
 
             setTimeout(() => {
-                makeSortable(skillId, value.priorityType, skillerStore.config[skillId].selectedRealm);
+                reDisableActions(skillId, selectedRealm);
+                makeSortable(skillId, value.priorityType, selectedRealm);
                 makeTippy(skillId);
             }, 300);
         });
@@ -203,8 +202,10 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
 
             setTimeout(() => {
                 Object.values(SKILLS).forEach(skill => {
-                    makeSortable(skill.id, skillerStore.config[skill.id].priorityType, skillerStore.config[skill.id].selectedRealm);
-                    makeTippy(skill.id)
+                    let selectedRealm = skillerStore.config[skill.id].selectedRealm;
+                    reDisableActions(skill.id, selectedRealm);
+                    makeSortable(skill.id, skillerStore.config[skill.id].priorityType, selectedRealm);
+                    makeTippy(skill.id);
                 });
             }, 300);
         })
@@ -246,6 +247,13 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
             }
         }
 
+        function reDisableActions(skillId, selectedRealm) {
+            $(`[id*="${skillId}-actionItem"]`).css('opacity', 1);
+            skillerStore.config[skillId][selectedRealm].disabledActions.forEach(i => {
+                $(`#${skillId}-actionItem-${i}`).css('opacity', 0.25);
+            });
+        }
+
         function Skiller(skillId) {
             return {
                 $template: '#skillerRoot',
@@ -255,12 +263,9 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                     let selectedRealm = skillerStore.config[skillId].selectedRealm;
                     let priorityType = skillerStore.config[skillId].priorityType;
 
-                    skillerStore.config[skillId][selectedRealm].disabledActions.forEach(i => {
-                        $(`#${skillId}-actionItem-${i}`).css('opacity', 0.25)
-                    });
-
+                    reDisableActions(skillId, selectedRealm);
                     makeSortable(skillId, priorityType, selectedRealm);
-                    makeTippy(skillId)
+                    makeTippy(skillId);
                 }
             }
         }
