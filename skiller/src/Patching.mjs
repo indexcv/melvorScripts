@@ -15,21 +15,6 @@ const {
 let actCheckCount = 0;
 const checkThresh = 5000;
 
-//FIXME: recipe items missing stops, all ????
-// [] woodcutting
-// [] fishing
-// [] firemaking
-// [] cooking
-// [] mining
-// [x] smithing
-// [] thieving
-// [x] fletching
-// [x] crafting
-// [x] runecrafting
-// [x] herblore
-// [] astrology
-// [] harvesting
-
 //methods
 function checkAction(skillId, action) {
     const selectedRealm = skillerMod.config[skillId].selectedRealm;
@@ -164,7 +149,7 @@ function patchSkill(skillId) {
                 }
 
                 actCheckCount = 0;
-            } else if (skillId === 'firemaking' && (checkAction(skillId, game[skillId].activeRecipe) || actCheckCount >= checkThresh)) {
+            } else if (skillId === 'firemaking' && (!checkAction(skillId, game[skillId].activeRecipe) || actCheckCount >= checkThresh)) {
                 const bestAction = getBestAction(skill);
 
                 if (bestAction !== undefined && game[skillId].activeRecipe.id !== bestAction.id) {
@@ -173,7 +158,7 @@ function patchSkill(skillId) {
                 }
 
                 actCheckCount = 0;
-            } else if (skillId === 'cooking' && (checkAction(skillId, game[skillId].activeRecipe) || actCheckCount >= checkThresh)) {
+            } else if (skillId === 'cooking' && (!checkAction(skillId, game[skillId].activeRecipe) || actCheckCount >= checkThresh)) {
                 const bestAction = getBestAction(skill);
 
                 if (bestAction !== undefined && game[skillId].activeRecipe.id !== bestAction.id) {
@@ -215,7 +200,7 @@ function patchSkill(skillId) {
                 }
 
                 actCheckCount = 0;
-            } else if (!skill.hasOwnPatch && (checkAction(skillId, game[skillId].activeRecipe) || actCheckCount >= checkThresh)) { //fixme: viia checkAction to bestAction külge???
+            } else if (!skill.hasOwnPatch && (!checkAction(skillId, game[skillId].activeRecipe) || actCheckCount >= checkThresh)) {
                 const bestAction = getBestAction(skill);
 
                 if (bestAction !== undefined && game[skillId].activeRecipe.id !== bestAction.id) {
