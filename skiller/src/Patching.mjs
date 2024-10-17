@@ -211,7 +211,7 @@ function patchSkill(skillId) {
                 actCheckCount = 0;
             }
         } catch (err) {
-            console.log({msg: `${id} encountered an error`, exception: err})
+            console.log({msg: `[Skiller] encountered an error`, exception: err})
         }
     }
 }

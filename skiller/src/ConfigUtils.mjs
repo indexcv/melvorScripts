@@ -86,7 +86,7 @@ function initConfig() {
         config[skill.id] = {
             enabled: false,
             collapsed: true,
-            selectedRealm: skill.id === 'harvesting' ? abyssalRealm.id : melvorRealm.id,
+            selectedRealm:  setSelectedRealm(skill.id),
             priorityType: priorityTypes.custom.id
         };
 
@@ -121,6 +121,28 @@ function initConfig() {
 
     // console.log('skiller - initConfig', config);
     return config;
+}
+
+function setSelectedRealm(skillId) {
+    if (game.activeAction && game.activeAction.id.toLowerCase().includes(skillId)) {
+        if (skillId === 'woodcutting') {
+            return Array.from(game.activeAction.activeTrees)[0].realm.id;
+        } else if (skillId === 'fishing') {
+            return game.activeAction.activeFish.realm.id;
+        } else if (skillId === 'mining') {
+            return game.activeAction.activeRock.realm.id;
+        } else if (skillId === 'astrology') {
+            return game.activeAction.activeConstellation.realm.id;
+        } else if (skillId === 'harvesting') {
+            return game.activeAction.activeVein.realm.id;
+        } else if (skillId === 'thieving') {
+            return game.activeAction.currentArea.realm.id;
+        } else {
+            return game.activeAction.activeRecipe.realm.id;
+        }
+    }
+
+    return skillId === 'harvesting' ? abyssalRealm.id : melvorRealm.id
 }
 
 export {storeConfig, loadConfig, initConfig};

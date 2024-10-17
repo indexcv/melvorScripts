@@ -1,6 +1,10 @@
 export async function setup({loadModule, settings, onCharacterLoaded, onInterfaceReady}) {
 
-    const {storeConfig, loadConfig} = await loadModule('src/ConfigUtils.mjs');
+    const {
+        storeConfig,
+        loadConfig,
+        initConfig
+    } = await loadModule('src/ConfigUtils.mjs');
     const {
         SKILLS,
         priorityTypes,
@@ -24,16 +28,23 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
         hasItA: hasItA
     };
 
-    // settings.section('General').add({
-    //     type: 'switch',
-    //     label: 'Show debug',
-    //     hint: 'Show debug, divs',
-    //     name: 'showDebug',
-    //     default: false,
-    //     onChange(value) {
-    //         events.emit('skiller-showDebug', value);
-    //     },
-    // });
+    settings.section('General').add({
+        type: 'button',
+        name: 'reset',
+        display: 'Reset all settings to default?',
+        color: 'danger',
+        onClick: () => events.emit('skillerResetAllSettings'),
+    });
+    settings.section('Debug').add({
+        type: 'switch',
+        label: 'Show debug',
+        hint: 'Show debug, divs under skiller mod menus',
+        name: 'showDebug',
+        default: false,
+        onChange(value) {
+            events.emit('skillerShowDebug', value);
+        },
+    });
 
     //hooks
     onInterfaceReady(async () => {
@@ -44,8 +55,7 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
             customPriorityType: priorityTypes.custom,
             sortables: {},
             tippies: {},
-            // skillerDebug: settings.section('General').get('showDebug'),
-            skillerDebug: false,
+            skillerDebug: settings.section('Debug').get('showDebug'),
             findSkill(skillId) {
                 return SKILLS.find(s => s.id === skillId);
             },
@@ -171,29 +181,45 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                 await storeConfig(skillerStore.config);
             },
         });
-        window.skillerMod['store'] = skillerStore;
+        skillerMod['store'] = skillerStore;
 
         events.on('skillerSetPriorityType', value => {
             let skillId = value.skillId
 
-            if (skillerStore.tippies[skillId]) {
-                skillerStore.tippies[skillId].forEach(t => t.destroy());
-                setTimeout(() => {
-                    skillerStore.tippies[skillId] = tippy(`#skiller-${skillId} [data-tippy-content]`, {
-                        animation: false,
-                        allowHTML: true,
-                    });
-                }, 500);
-            }
-
             setTimeout(() => {
-                makeSortable(skillId, value.priorityType, skillerStore.config[skillId].selectedRealm)
-            }, 500);
+                makeSortable(skillId, value.priorityType, skillerStore.config[skillId].selectedRealm);
+                makeTippy(skillId);
+            }, 300);
         });
 
-        events.on('skiller-showDebug', value => {
+        events.on('skillerShowDebug', value => {
             skillerStore.skillerDebug = value;
         });
+
+        events.on('skillerResetAllSettings', async () => {
+            skillerMod['config'] = initConfig();
+            skillerStore.config = skillerMod['config'];
+            await storeConfig(skillerStore.config);
+
+            setTimeout(() => {
+                Object.values(SKILLS).forEach(skill => {
+                    makeSortable(skill.id, skillerStore.config[skill.id].priorityType, skillerStore.config[skill.id].selectedRealm);
+                    makeTippy(skill.id)
+                });
+            }, 300);
+        })
+
+        function makeTippy(skillId) {
+            if (skillerStore.tippies[skillId]) {
+                skillerStore.tippies[skillId].forEach(t => t.destroy());
+                delete skillerStore.tippies[skillId]
+            }
+
+            skillerStore.tippies[skillId] = tippy(`#skiller-${skillId} [data-tippy-content]`, {
+                animation: false,
+                allowHTML: true
+            });
+        }
 
         function makeSortable(skillId, priorityType, selectedRealm) {
             if (skillerStore.sortables[skillId]) {
@@ -234,11 +260,7 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                     });
 
                     makeSortable(skillId, priorityType, selectedRealm);
-
-                    skillerStore.tippies[skillId] = tippy(`#skiller-${skillId} [data-tippy-content]`, {
-                        animation: false,
-                        allowHTML: true
-                    });
+                    makeTippy(skillId)
                 }
             }
         }
@@ -254,7 +276,7 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
 
     onCharacterLoaded(async () => {
         const t0 = performance.now();
-        window.skillerMod['config'] = await loadConfig();
+        skillerMod['config'] = await loadConfig();
 
         await loadModule('src/Patching.mjs');
 
