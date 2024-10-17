@@ -5,12 +5,12 @@ const {
     SKILL_ACTIONS,
     hasItA,
     abyssalRealm,
-    eternalRealm,
-    melvorRealm
+    melvorRealm,
+    itARealms
 } = await loadModule('src/Consts.mjs');
 const {getMasteryLevel} = await loadModule('src/Utils.mjs');
 
-const configVersion = 1;
+const configVersion = 2;
 
 async function compress(string, encoding) {
     const byteArray = new TextEncoder().encode(string);
@@ -53,13 +53,12 @@ async function loadConfig() {
     let storedConfig = characterStorage.getItem('config');
 
     if (!storedConfig) {
-        // console.log('skiller - loadConfig no stored config');
         return config;
     }
 
     //config has changes so much object -> compressed base64, need to clear stored config and start over
     if (storedConfig.version !== configVersion) {
-        console.warn('[Skiller] - stored config version did not match current config version, removing stored config', storedConfig.version, configVersion);
+        console.log('skiller - stored config version did not match current config version, removing stored config', storedConfig.version, configVersion);
         characterStorage.removeItem('config');
         return config;
     }
@@ -86,8 +85,7 @@ function initConfig() {
 
         config[skill.id] = {
             enabled: false,
-            collapsed: false,
-            //FIXME: add realm selection, and use this in bestAction
+            collapsed: true,
             selectedRealm: skill.id === 'harvesting' ? abyssalRealm.id : melvorRealm.id,
             priorityType: priorityTypes.custom.id
         };
@@ -99,7 +97,7 @@ function initConfig() {
             }
 
             SKILL_ACTIONS[skill.id][realm.id] = actions.sort((a, b) => {
-                return realm.id === abyssalRealm.id
+                return itARealms.includes(realm)
                     ? a.action.abyssalLevel - b.action.abyssalLevel
                     : a.action.level - b.action.level;
             });

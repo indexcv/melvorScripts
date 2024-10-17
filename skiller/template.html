@@ -36,7 +36,7 @@
                     </div>
                 </div>
                 <div class="block-content" style="padding-top: 12px" v-show="!store.config[skillId].collapsed">
-                    <div :id="skillId + '-prioritySettings' - store.config[skillId].priorityType"
+                    <div :id="skillId + '-prioritySettings'"
                          :class="skillId + '-action-toggles'">
                         <div @click="store.setDisableItem(skillId, actionItem.idx)"
                              :id="skillId + '-actionItem-' + actionItem.idx"
@@ -56,6 +56,12 @@
                 </div>
                 <div class="block-content d-flex" v-if="store.skillerDebug">
                     {{store.config[skillId]}}
+                </div>
+                <div class="block-content d-flex" v-if="store.skillerDebug">
+                    <button @click="store.realmChange(skillId, realm.id)" class="btn btn-primary locked"
+                            v-for="realm in game.realms.allObjects" style="margin-right: 12px">
+                        <img :src="realm.media" width="30" height="30"/>
+                    </button>
                 </div>
             </div>
         </div>

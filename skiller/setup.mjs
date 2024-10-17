@@ -1,17 +1,11 @@
-export async function setup({loadModule, settings, characterStorage, onCharacterLoaded, patch, onInterfaceReady}) {
-    const {
-        storeConfig,
-        loadConfig,
-        initConfig
-    } = await loadModule('src/ConfigUtils.mjs');
+export async function setup({loadModule, settings, onCharacterLoaded, onInterfaceReady}) {
+
+    const {storeConfig, loadConfig} = await loadModule('src/ConfigUtils.mjs');
     const {
         SKILLS,
         priorityTypes,
         SKILL_ACTIONS,
         hasItA,
-        melvorRealm,
-        abyssalRealm,
-        eternalRealm
     } = await loadModule('src/Consts.mjs');
     const {
         getAction,
@@ -23,16 +17,35 @@ export async function setup({loadModule, settings, characterStorage, onCharacter
     } = await loadModule('src/Utils.mjs');
     const events = mitt();
 
+    window.skillerMod = {
+        SKILLS: SKILLS,
+        SKILL_ACTIONS: SKILL_ACTIONS,
+        priorityTypes: priorityTypes,
+        hasItA: hasItA
+    };
+
+    // settings.section('General').add({
+    //     type: 'switch',
+    //     label: 'Show debug',
+    //     hint: 'Show debug, divs',
+    //     name: 'showDebug',
+    //     default: false,
+    //     onChange(value) {
+    //         events.emit('skiller-showDebug', value);
+    //     },
+    // });
+
     //hooks
     onInterfaceReady(async () => {
         const t0 = performance.now();
 
         const skillerStore = ui.createStore({
-            config: await loadConfig(),
+            config: skillerMod.config,
             customPriorityType: priorityTypes.custom,
             sortables: {},
             tippies: {},
-            skillerDebug: true,
+            // skillerDebug: settings.section('General').get('showDebug'),
+            skillerDebug: false,
             findSkill(skillId) {
                 return SKILLS.find(s => s.id === skillId);
             },
@@ -41,7 +54,6 @@ export async function setup({loadModule, settings, characterStorage, onCharacter
                 return product ? product.media : action.media;
             },
             getActions(skillId) {
-                console.log('getActions', skillId);
                 let priorityType = skillerStore.config[skillId].priorityType;
                 let selectedRealm = skillerStore.config[skillId].selectedRealm;
                 if (priorityType === priorityTypes.mastery.id) {
@@ -85,12 +97,11 @@ export async function setup({loadModule, settings, characterStorage, onCharacter
                 function priorityTypeFilter(priorityType) {
                     const skill = skillerStore.findSkill(skillId);
                     const selectedRealm = skillerStore.config[skillId].selectedRealm;
-                    return priorityType === priorityTypes.custom
-                        || priorityType === priorityTypes.bestXP
+                    return [priorityTypes.custom, priorityTypes.bestXP].includes(priorityType)
                         || (priorityType === priorityTypes.lowestQuantity && skill.includeQuantity)
                         || (priorityType === priorityTypes.sellsFor && skill.includeSellsFor)
-                        || (skill.hasMastery && !skillerStore.config[skillId][selectedRealm].masteryDone && (priorityType === priorityTypes.mastery || priorityType === priorityTypes.masteryLow))
-                        || (skill.hasIntensity && !skillerStore.config[skillId][selectedRealm].intensityDone && (priorityType === priorityTypes.intensity || priorityType === priorityTypes.intensityLow));
+                        || (skill.hasMastery && !skillerStore.config[skillId][selectedRealm].masteryDone && [priorityTypes.mastery, priorityTypes.masteryLow].includes(priorityType))
+                        || (skill.hasIntensity && !skillerStore.config[skillId][selectedRealm].intensityDone && [priorityTypes.intensity, priorityTypes.intensityLow].includes(priorityType));
                 }
 
                 return Object.values(priorityTypes).filter(priorityTypeFilter)
@@ -104,9 +115,11 @@ export async function setup({loadModule, settings, characterStorage, onCharacter
                 await storeConfig(skillerStore.config);
             },
             async setPriorityType(skillId, priorityType) {
+                if (priorityType === skillerStore.config[skillId].priorityType) {
+                    return
+                }
                 skillerStore.config[skillId].priorityType = priorityType;
-                skillerStore.sortables[skillId].option("disabled", priorityType !== priorityTypes.custom.id);
-                events.emit('skillerSetPriorityType', skillId)
+                events.emit('skillerSetPriorityType', {skillId: skillId, priorityType: priorityType});
                 await storeConfig(skillerStore.config);
             },
             async setDisableItem(skillId, actionItemIdx) {
@@ -120,10 +133,26 @@ export async function setup({loadModule, settings, characterStorage, onCharacter
                 }
                 await storeConfig(skillerStore.config);
             },
+            async setSelectedRealm(skillId, realmId) {
+                skillerStore.config[skillId].selectedRealm = realmId;
+                events.emit('skillerSetPriorityType', {
+                    skillId: skillId,
+                    priorityType: skillerStore.config[skillId].priorityType
+                });
+                await storeConfig(skillerStore.config);
+            },
+            async setMasteryDone(skillId, realm) {
+                skillerStore.config[skillId][realm].masteryDone = true;
+                await storeConfig(skillerStore.config);
+            },
+            async setIntensityDone(skillId, realm) {
+                skillerStore.config[skillId][realm].intensityDone = true;
+                await storeConfig(skillerStore.config);
+            },
             async priorityReset(skillId) {
                 let selectedRealm = skillerStore.config[skillId].selectedRealm;
                 skillerStore.config[skillId][selectedRealm].priority = SKILL_ACTIONS[skillId][selectedRealm].map(a => a.idx);
-                skillerStore.sortables[skillId].sort(skillerStore.config[skillId][selectedRealm].priority, true);
+                events.emit('skillerSetPriorityType', {skillId: skillId, priorityType: priorityTypes.custom.id});
                 await storeConfig(skillerStore.config);
             },
             async skillConfigReset(skillId) {
@@ -138,12 +167,15 @@ export async function setup({loadModule, settings, characterStorage, onCharacter
                 $(`.${skillId}-action-toggles div`).each((_, e) => {
                     $(e).css('opacity', 1);
                 });
-                skillerStore.sortables[skillId].sort(skillerStore.config[skillId][skillerStore.config[skillId].selectedRealm].priority, true);
+                events.emit('skillerSetPriorityType', {skillId: skillId, priorityType: priorityTypes.custom.id});
                 await storeConfig(skillerStore.config);
-            }
+            },
         });
+        window.skillerMod['store'] = skillerStore;
 
-        events.on('skillerSetPriorityType', skillId => {
+        events.on('skillerSetPriorityType', value => {
+            let skillId = value.skillId
+
             if (skillerStore.tippies[skillId]) {
                 skillerStore.tippies[skillId].forEach(t => t.destroy());
                 setTimeout(() => {
@@ -153,7 +185,40 @@ export async function setup({loadModule, settings, characterStorage, onCharacter
                     });
                 }, 500);
             }
+
+            setTimeout(() => {
+                makeSortable(skillId, value.priorityType, skillerStore.config[skillId].selectedRealm)
+            }, 500);
         });
+
+        events.on('skiller-showDebug', value => {
+            skillerStore.skillerDebug = value;
+        });
+
+        function makeSortable(skillId, priorityType, selectedRealm) {
+            if (skillerStore.sortables[skillId]) {
+                skillerStore.sortables[skillId].destroy()
+                delete skillerStore.sortables[skillId]
+            }
+            if (priorityType === priorityTypes.custom.id) {
+                skillerStore.sortables[skillId] = Sortable.create(document.getElementById(`${skillId}-prioritySettings`), {
+                    animation: 150,
+                    filter: '.locked',
+                    disabled: priorityType !== priorityTypes.custom.id,
+                    onMove: (event) => {
+                        if (event.related) {
+                            return !event.related.classList.contains('locked');
+                        }
+                    },
+                    onEnd: async (event) => {
+                        skillerStore.config[skillId][selectedRealm].priority = skillerStore.sortables[skillId].toArray().map(Number);
+                        await storeConfig(skillerStore.config);
+                    },
+                });
+
+                skillerStore.sortables[skillId].sort(skillerStore.config[skillId][selectedRealm].priority, true);
+            }
+        }
 
         function Skiller(skillId) {
             return {
@@ -168,23 +233,7 @@ export async function setup({loadModule, settings, characterStorage, onCharacter
                         $(`#${skillId}-actionItem-${i}`).css('opacity', 0.25)
                     });
 
-                    skillerStore.sortables[skillId] = Sortable.create(document.getElementById(`${skillId}-prioritySettings`), {
-                        animation: 150,
-                        filter: '.locked',
-                        disabled: priorityType !== priorityTypes.custom.id,
-                        onMove: (event) => {
-                            if (event.related) {
-                                return !event.related.classList.contains('locked');
-                            }
-                        },
-                        onEnd: async (event) => {
-                            skillerStore.config[skillId][selectedRealm].priority = skillerStore.sortables[skillId].toArray().map(Number);
-                            await storeConfig(skillerStore.config);
-                        },
-                    });
-                    if (priorityType === priorityTypes.custom.id) {
-                        skillerStore.sortables[skillId].sort(skillerStore.config[skillId][selectedRealm].priority, true);
-                    }
+                    makeSortable(skillId, priorityType, selectedRealm);
 
                     skillerStore.tippies[skillId] = tippy(`#skiller-${skillId} [data-tippy-content]`, {
                         animation: false,

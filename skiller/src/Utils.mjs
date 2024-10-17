@@ -1,47 +1,47 @@
 const {loadModule} = mod.getContext(import.meta);
 const {melvorRealm} = await loadModule('src/Consts.mjs');
 
-function getAction(skillName, id) {
-    return game[skillName].actions.getObjectByID(id);
+function getAction(skillId, id) {
+    return game[skillId].actions.getObjectByID(id);
 }
 
-function getMasteryLevel(skillName, action) {
-    return game[skillName].getMasteryLevel(action);
+function getMasteryLevel(skillId, action) {
+    return game[skillId].getMasteryLevel(action);
 }
 
-function getMasteryXP(skillName, action) {
-    return game[skillName].getMasteryXP(action);
+function getMasteryXP(skillId, action) {
+    return game[skillId].getMasteryXP(action);
 }
 
-function getXPRate(skillName, action) {
-    const XP = game[skillName].currentRealm.id === melvorRealm.id
-        ? game[skillName].modifyXP(action.baseExperience)
-        : game[skillName].modifyAbyssalXP(action.baseAbyssalExperience);
+function getXPRate(skillId, action) {
+    const XP = action.realm === melvorRealm
+        ? game[skillId].modifyXP(action.baseExperience)
+        : game[skillId].modifyAbyssalXP(action.baseAbyssalExperience);
 
-    if (skillName === 'woodcutting') {
-        return XP / game[skillName].getTreeInterval(action);
-    } else if (skillName === 'fishing') {
-        return XP / ((game[skillName].getMinFishInterval(action) + game[skillName].getMaxFishInterval(action)) * 0.5);
-    } else if (skillName === 'firemaking') {
-        return XP / game[skillName].modifyInterval(action.baseInterval, action);
-    } else if (skillName === 'cooking') {
-        return XP / game[skillName].getRecipeCookingInterval(action)
-    } else if (skillName === 'astrology') {
-        return XP / game[skillName].getConstellationInterval(action);
+    if (skillId === 'woodcutting') {
+        return XP / game[skillId].getTreeInterval(action);
+    } else if (skillId === 'fishing') {
+        return XP / ((game[skillId].getMinFishInterval(action) + game[skillId].getMaxFishInterval(action)) * 0.5);
+    } else if (skillId === 'firemaking') {
+        return XP / game[skillId].modifyInterval(action.baseInterval, action);
+    } else if (skillId === 'cooking') {
+        return XP / game[skillId].getRecipeCookingInterval(action)
+    } else if (skillId === 'astrology') {
+        return XP / game[skillId].getConstellationInterval(action);
     }
 
-    return XP / game[skillName].modifyInterval(game[skillName].baseInterval, action);
+    return XP / game[skillId].modifyInterval(game[skillId].baseInterval, action);
 }
 
 function bankQty(item) {
     return game.bank.getQty(item);
 }
 
-function getProduct(skillName, action) {
-    if (skillName === 'firemaking') {
+function getProduct(skillId, action) {
+    if (skillId === 'firemaking') {
         return action.log;
     }
-    if (skillName === 'herblore') {
+    if (skillId === 'herblore') {
         return action.potions[3];
     }
 

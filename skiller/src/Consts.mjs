@@ -178,4 +178,5 @@ export const SKILL_ACTIONS = {},
     hasItA = cloudManager.hasItAEntitlementAndIsEnabled,
     melvorRealm = game.realms.getObjectByID('melvorD:Melvor'),
     abyssalRealm = hasItA && game.realms.getObjectByID('melvorItA:Abyssal'),
-    eternalRealm = hasItA && game.realms.getObjectByID('melvorItA:Eternal');
+    eternalRealm = hasItA && game.realms.getObjectByID('melvorItA:Eternal'),
+    itARealms = [abyssalRealm, eternalRealm];
