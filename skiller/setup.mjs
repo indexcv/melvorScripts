@@ -44,26 +44,26 @@ export async function setup({loadModule, settings, characterStorage, onCharacter
                 console.log('getActions', skillId);
                 let priorityType = skillerStore.config[skillId].priorityType;
                 let selectedRealm = skillerStore.config[skillId].selectedRealm;
-                if(priorityType === priorityTypes.mastery.id) {
+                if (priorityType === priorityTypes.mastery.id) {
                     return SKILL_ACTIONS[skillId][selectedRealm]
                         .filter(a => getMasteryLevel(skillId, getAction(skillId, a.action.id)))
                         .sort((a, b) => getMasteryXP(skillId, getAction(skillId, b.action.id)) - getMasteryXP(skillId, getAction(skillId, a.action.id)));
-                } else if(priorityType === priorityTypes.masteryLow.id) {
+                } else if (priorityType === priorityTypes.masteryLow.id) {
                     return SKILL_ACTIONS[skillId][selectedRealm]
                         .filter(a => getMasteryLevel(skillId, getAction(skillId, a.action.id)))
                         .sort((a, b) => getMasteryXP(skillId, getAction(skillId, a.action.id)) - getMasteryXP(skillId, getAction(skillId, b.action.id)));
-                } else if(priorityType === priorityTypes.intensity.id) {
+                } else if (priorityType === priorityTypes.intensity.id) {
                     return SKILL_ACTIONS[skillId][selectedRealm]
                         .filter(a => getAction(skillId, a.action.id).intensityPercent < 100)
                         .sort((a, b) => getAction(skillId, b.action.id).intensityPercent - getAction(skillId, a.action.id).intensityPercent);
-                } else if(priorityType === priorityTypes.intensityLow.id) {
+                } else if (priorityType === priorityTypes.intensityLow.id) {
                     return SKILL_ACTIONS[skillId][selectedRealm]
                         .filter(a => getAction(skillId, a.action.id).intensityPercent < 100)
                         .sort((a, b) => getAction(skillId, a.action.id).intensityPercent - getAction(skillId, b.action.id).intensityPercent);
-                } else if(priorityType === priorityTypes.lowestQuantity.id) {
+                } else if (priorityType === priorityTypes.lowestQuantity.id) {
                     return SKILL_ACTIONS[skillId][selectedRealm]
                         .sort((a, b) => bankQty(getProduct(skillId, a.action)) - bankQty(getProduct(skillId, b.action)));
-                } else if(priorityType === priorityTypes.bestXP.id) {
+                } else if (priorityType === priorityTypes.bestXP.id) {
                     return SKILL_ACTIONS[skillId][selectedRealm]
                         .sort((a, b) => getXPRate(skillId, getAction(skillId, b.action.id)) - getXPRate(skillId, getAction(skillId, a.action.id)));
                 } else if (priorityType === priorityTypes.sellsFor.id) {
@@ -92,6 +92,7 @@ export async function setup({loadModule, settings, characterStorage, onCharacter
                         || (skill.hasMastery && !skillerStore.config[skillId][selectedRealm].masteryDone && (priorityType === priorityTypes.mastery || priorityType === priorityTypes.masteryLow))
                         || (skill.hasIntensity && !skillerStore.config[skillId][selectedRealm].intensityDone && (priorityType === priorityTypes.intensity || priorityType === priorityTypes.intensityLow));
                 }
+
                 return Object.values(priorityTypes).filter(priorityTypeFilter)
             },
             async setEnabled(skillId, enabled) {
@@ -128,7 +129,9 @@ export async function setup({loadModule, settings, characterStorage, onCharacter
             async skillConfigReset(skillId) {
                 skillerStore.config[skillId].priorityType = priorityTypes.custom.id;
                 game.realms.allObjects.forEach(realm => {
-                    if (!SKILL_ACTIONS[skillId][realm.id]) { return }
+                    if (!SKILL_ACTIONS[skillId][realm.id]) {
+                        return
+                    }
                     skillerStore.config[skillId][realm.id].priority = SKILL_ACTIONS[skillId][realm.id].map(a => a.idx);
                     skillerStore.config[skillId][realm.id].disabledActions = [];
                 });

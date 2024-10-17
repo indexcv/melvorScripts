@@ -1,6 +1,14 @@
-const { loadModule, characterStorage } = mod.getContext(import.meta);
-const { priorityTypes, SKILLS, SKILL_ACTIONS, hasItA, abyssalRealm, eternalRealm, melvorRealm } = await loadModule('src/Consts.mjs');
-const { getMasteryLevel } = await loadModule('src/Utils.mjs');
+const {loadModule, characterStorage} = mod.getContext(import.meta);
+const {
+    priorityTypes,
+    SKILLS,
+    SKILL_ACTIONS,
+    hasItA,
+    abyssalRealm,
+    eternalRealm,
+    melvorRealm
+} = await loadModule('src/Consts.mjs');
+const {getMasteryLevel} = await loadModule('src/Utils.mjs');
 
 const configVersion = 1;
 
@@ -37,7 +45,7 @@ async function decompress(base64String, encoding) {
 
 async function storeConfig(config) {
     const toStorage = await compress(JSON.stringify(config), 'gzip');
-    characterStorage.setItem('config', { version: configVersion, config: toStorage });
+    characterStorage.setItem('config', {version: configVersion, config: toStorage});
 }
 
 async function loadConfig() {
@@ -117,4 +125,4 @@ function initConfig() {
     return config;
 }
 
-export { storeConfig, loadConfig, initConfig };
+export {storeConfig, loadConfig, initConfig};

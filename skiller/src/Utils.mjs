@@ -1,5 +1,5 @@
-const { loadModule } = mod.getContext(import.meta);
-const { melvorRealm } = await loadModule('src/Consts.mjs');
+const {loadModule} = mod.getContext(import.meta);
+const {melvorRealm} = await loadModule('src/Consts.mjs');
 
 function getAction(skillName, id) {
     return game[skillName].actions.getObjectByID(id);
@@ -48,4 +48,4 @@ function getProduct(skillName, action) {
     return action.product;
 }
 
-export { getAction, getMasteryLevel, getMasteryXP, getXPRate, bankQty, getProduct };
+export {getAction, getMasteryLevel, getMasteryXP, getXPRate, bankQty, getProduct};
