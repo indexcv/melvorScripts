@@ -1,0 +1,5 @@
+{
+  "namespace": "indexc_killer",
+  "icon": "icon.png",
+  "setup": "setup.mjs"
+}
