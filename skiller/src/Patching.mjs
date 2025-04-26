@@ -1,4 +1,4 @@
-const {loadModule, patch} = mod.getContext(import.meta);
+const {loadModule, patch, settings} = mod.getContext(import.meta);
 const {
     SKILLS,
     priorityTypes,
@@ -15,9 +15,15 @@ const {
 let actCheckCount = 0;
 const checkThresh = 5000;
 
+//TODO: thieving undiscovered items (thieving2:900-966)
+//TODO: runecrafting only runes ()
+//TODO: smithing only bars ()
+//TODO: summoning? from multiple recipes select best one ?????
+//TODO: archaeology????????????
+
 //methods
 function checkAction(skillId, action) {
-    const selectedRealm = skillerMod.config[skillId].selectedRealm;
+    const selectedRealm = game.currentRealm.id;
     const isBasicUnlockedAndSameRealm = game[skillId].isBasicSkillRecipeUnlocked(action)
         && action.realm.id === selectedRealm;
 
@@ -43,7 +49,7 @@ function checkAction(skillId, action) {
     } else if (skillId === 'thieving') {
         const maxHit = Math.floor(numberMultiplier * action.maxHit * (1 - game.combat.player.equipmentStats.damageReduction / 100));
         //Don't pickpocket things that can kill you unless success rate is 100%
-        return !(game.combat.player.autoEatThreshold < maxHit && game[skillId].getNPCSuccessRate(action) < 100)
+        return !(game.combat.player.autoEatThreshold < maxHit && game[skillId].getNPCSuccessRate(action) < settings.section('General').get('thievingSuccessRate'))
             && isBasicUnlockedAndSameRealm;
     } else if (skillId === 'astrology') {
         return isBasicUnlockedAndSameRealm;
@@ -57,7 +63,7 @@ function checkAction(skillId, action) {
 
 function getBestAction(skill) {
     const skillId = skill.id;
-    const selectedRealm = skillerMod.config[skillId].selectedRealm;
+    const selectedRealm = game.currentRealm.id;
     const priorityType = skillerMod.config[skillId].priorityType;
     const priority = skillerMod.config[skillId][selectedRealm].priority.map(idx => game[skillId].actions.allObjects[idx]);
     const disabledActions = skillerMod.config[skillId][selectedRealm].disabledActions.map(idx => game[skillId].actions.allObjects[idx]);
@@ -68,16 +74,22 @@ function getBestAction(skill) {
             .filter(thisAction => thisAction.realm.id === selectedRealm && !disabledActions.includes(thisAction) && checkAction(skillId, thisAction) && getMasteryLevel(skillId, thisAction) < 99)
             .sort((a, b) => getMasteryXP(skillId, b) - getMasteryXP(skillId, a));
 
-        if (actions.length === 0) {
+        if (game[skillId].actions.filter(thisAction => thisAction.realm.id === selectedRealm && getMasteryLevel(skillId, thisAction) < 99).length === 0) {
             skillerMod.store.setMasteryDone(skillId, selectedRealm);
+        }
+        if (actions.length === 0) {
+            skillerMod.store.setPriorityType(skillId, priorityTypes.bestXP.id)
         }
     } else if (!skillerMod.config[skillId][selectedRealm].mastery && priorityType === priorityTypes.masteryLow.id) {
         actions = game[skillId].actions
             .filter(thisAction => thisAction.realm.id === selectedRealm && !disabledActions.includes(thisAction) && checkAction(skillId, thisAction) && getMasteryLevel(skillId, thisAction) < 99)
             .sort((a, b) => getMasteryXP(skillId, a) - getMasteryXP(skillId, b));
 
-        if (actions.length === 0) {
+        if (game[skillId].actions.filter(thisAction => thisAction.realm.id === selectedRealm && getMasteryLevel(skillId, thisAction) < 99).length === 0) {
             skillerMod.store.setMasteryDone(skillId, selectedRealm);
+        }
+        if (actions.length === 0) {
+            skillerMod.store.setPriorityType(skillId, priorityTypes.bestXP.id)
         }
     } else if (skill.includeQuantity && priorityType === priorityTypes.lowestQuantity.id) {
         actions = game[skillId].actions
@@ -94,16 +106,22 @@ function getBestAction(skill) {
             .filter(thisAction => thisAction.realm.id === selectedRealm && !disabledActions.includes(thisAction) && checkAction(skillId, thisAction) && thisAction.intensityPercent < 100)
             .sort((a, b) => b.intensityPercent - a.intensityPercent);
 
-        if (actions.length === 0) {
+        if (game[skillId].actions.filter(thisAction => thisAction.realm.id === selectedRealm && thisAction.intensityPercent < 100).length === 0) {
             skillerMod.store.setIntensityDone(skillId, selectedRealm)
+        }
+        if (actions.length === 0) {
+            skillerMod.store.setPriorityType(skillId, priorityTypes.bestXP.id)
         }
     } else if (priorityType === priorityTypes.intensityLow.id) {
         actions = game[skillId].actions
             .filter(thisAction => thisAction.realm.id === selectedRealm && !disabledActions.includes(thisAction) && checkAction(skillId, thisAction) && thisAction.intensityPercent < 100)
             .sort((a, b) => a.intensityPercent - b.intensityPercent);
 
-        if (actions.length === 0) {
+        if (game[skillId].actions.filter(thisAction => thisAction.realm.id === selectedRealm && thisAction.intensityPercent < 100).length === 0) {
             skillerMod.store.setIntensityDone(skillId, selectedRealm)
+        }
+        if (actions.length === 0) {
+            skillerMod.store.setPriorityType(skillId, priorityTypes.bestXP.id)
         }
     }
 
@@ -216,95 +234,56 @@ function patchSkill(skillId) {
     }
 }
 
-patch(Woodcutting, 'selectTree').after(function (o, action) {
-    skillerMod.store.setSelectedRealm('woodcutting', action.realm.id)
-});
 patch(Woodcutting, 'postAction').after(function () {
     patchSkill('woodcutting')
 });
 
-patch(Fishing, 'onAreaStartButtonClick').after(function (o, area) {
-    skillerMod.store.setSelectedRealm('fishing', area.realm.id)
-});
 patch(Fishing, 'postAction').after(function () {
     patchSkill('fishing')
 });
 
-patch(Firemaking, 'burnLog').after(function () {
-    skillerMod.store.setSelectedRealm('firemaking', game['firemaking'].selectedRecipe.realm.id)
-});
 patch(Firemaking, 'postAction').after(function () {
     patchSkill('firemaking')
 });
 
-patch(Cooking, 'onActiveCookButtonClick').after(function (o, category) {
-    skillerMod.store.setSelectedRealm('cooking', game['cooking'].selectedRecipes.get(category).realm.id)
-});
 patch(Cooking, 'postAction').after(function () {
     patchSkill('cooking')
 });
 
-patch(Mining, 'onRockClick').after(function (o, action) {
-    skillerMod.store.setSelectedRealm('mining', action.realm.id)
-});
 patch(Mining, 'postAction').after(function () {
     patchSkill('mining')
 });
 
-patch(Smithing, 'createButtonOnClick').after(function () {
-    skillerMod.store.setSelectedRealm('smithing', game['smithing'].selectedRecipe.realm.id)
-});
 patch(Smithing, 'postAction').after(function () {
     patchSkill('smithing')
 });
 
-patch(Thieving, 'startThieving').after(function (o, area, npc) {
-    skillerMod.store.setSelectedRealm('thieving', npc.realm.id)
-});
 patch(Thieving, 'postAction').after(function () {
     patchSkill('thieving')
 });
 
-patch(Fletching, 'createButtonOnClick').after(function () {
-    skillerMod.store.setSelectedRealm('fletching', game['fletching'].selectedRecipe.realm.id)
-});
 patch(Fletching, 'postAction').after(function () {
     patchSkill('fletching')
 });
 
-patch(Crafting, 'createButtonOnClick').after(function () {
-    skillerMod.store.setSelectedRealm('crafting', game['crafting'].selectedRecipe.realm.id)
-});
 patch(Crafting, 'postAction').after(function () {
     patchSkill('crafting')
 });
 
-patch(Runecrafting, 'createButtonOnClick').after(function () {
-    skillerMod.store.setSelectedRealm('runecrafting', game['runecrafting'].selectedRecipe.realm.id)
-});
 patch(Runecrafting, 'postAction').after(function () {
     patchSkill('runecrafting')
 });
 
-patch(Herblore, 'createButtonOnClick').after(function () {
-    skillerMod.store.setSelectedRealm('herblore', game['herblore'].selectedRecipe.realm.id)
-});
 patch(Herblore, 'postAction').after(function () {
     patchSkill('herblore')
 });
 
 
-patch(Astrology, 'studyConstellationOnClick').after(function (o, action) {
-    skillerMod.store.setSelectedRealm('astrology', action.realm.id)
-});
 patch(Astrology, 'postAction').after(function () {
     patchSkill('astrology')
 });
 
 if (hasItA) {
-    patch(Harvesting, 'onVeinClick').after(function (o, action) {
-        skillerMod.store.setSelectedRealm('harvesting', action.realm.id)
-    });
     patch(Harvesting, 'postAction').after(function () {
         patchSkill('harvesting')
     });

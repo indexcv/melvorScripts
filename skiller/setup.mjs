@@ -35,6 +35,13 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
         color: 'danger',
         onClick: () => events.emit('skillerResetAllSettings'),
     });
+    settings.section('General').add({
+        type: 'number',
+        name: 'thievingSuccessRate',
+        label: 'Pickpocket on equal or greater than set success rate',
+        hint: 'Don\'t pickpocket things that can kill you unless success rate is 100%, by changing it lower NPC may kill if not successful, default : 100',
+        default: 100
+    });
     settings.section('Debug').add({
         type: 'switch',
         label: 'Show debug',
@@ -65,13 +72,13 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
             },
             getActions(skillId) {
                 let priorityType = skillerStore.config[skillId].priorityType;
-                let selectedRealm = skillerStore.config[skillId].selectedRealm;
+                let selectedRealm = game.currentRealm.id;
                 let retArray = [...SKILL_ACTIONS[skillId][selectedRealm]];
                 if (priorityType === priorityTypes.mastery.id) {
-                    return retArray.filter(a => getMasteryLevel(skillId, getAction(skillId, a.action.id)))
+                    return retArray.filter(a => getMasteryLevel(skillId, getAction(skillId, a.action.id)) < 99)
                         .sort((a, b) => getMasteryXP(skillId, getAction(skillId, b.action.id)) - getMasteryXP(skillId, getAction(skillId, a.action.id)));
                 } else if (priorityType === priorityTypes.masteryLow.id) {
-                    return retArray.filter(a => getMasteryLevel(skillId, getAction(skillId, a.action.id)))
+                    return retArray.filter(a => getMasteryLevel(skillId, getAction(skillId, a.action.id)) < 99)
                         .sort((a, b) => getMasteryXP(skillId, getAction(skillId, a.action.id)) - getMasteryXP(skillId, getAction(skillId, b.action.id)));
                 } else if (priorityType === priorityTypes.intensity.id) {
                     return retArray.filter(a => getAction(skillId, a.action.id).intensityPercent < 100)
@@ -98,7 +105,7 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
             getPriorityTypes(skillId) {
                 function priorityTypeFilter(priorityType) {
                     const skill = skillerStore.findSkill(skillId);
-                    const selectedRealm = skillerStore.config[skillId].selectedRealm;
+                    const selectedRealm = game.currentRealm.id;
                     return [priorityTypes.custom, priorityTypes.bestXP].includes(priorityType)
                         || (priorityType === priorityTypes.lowestQuantity && skill.includeQuantity)
                         || (priorityType === priorityTypes.sellsFor && skill.includeSellsFor)
@@ -125,7 +132,7 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                 await storeConfig(skillerStore.config);
             },
             async setDisableItem(skillId, actionItemIdx) {
-                let selectedRealm = skillerStore.config[skillId].selectedRealm;
+                let selectedRealm = game.currentRealm.id;
                 if (skillerStore.config[skillId][selectedRealm].disabledActions.includes(actionItemIdx)) {
                     skillerStore.config[skillId][selectedRealm].disabledActions.splice(skillerStore.config[skillId][selectedRealm].disabledActions.indexOf(actionItemIdx), 1)
                     $(`#${skillId}-actionItem-${actionItemIdx}`).fadeTo(200, 1);
@@ -133,14 +140,6 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                     skillerStore.config[skillId][selectedRealm].disabledActions.push(actionItemIdx);
                     $(`#${skillId}-actionItem-${actionItemIdx}`).fadeTo(200, 0.25);
                 }
-                await storeConfig(skillerStore.config);
-            },
-            async setSelectedRealm(skillId, realmId) {
-                skillerStore.config[skillId].selectedRealm = realmId;
-                events.emit('skillerSetPriorityType', {
-                    skillId: skillId,
-                    priorityType: skillerStore.config[skillId].priorityType
-                });
                 await storeConfig(skillerStore.config);
             },
             async setMasteryDone(skillId, realm) {
@@ -152,7 +151,7 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                 await storeConfig(skillerStore.config);
             },
             async priorityReset(skillId) {
-                let selectedRealm = skillerStore.config[skillId].selectedRealm;
+                let selectedRealm = game.currentRealm.id;
                 skillerStore.config[skillId][selectedRealm].priority = [...SKILL_ACTIONS[skillId][selectedRealm].map(a => a.idx)];
                 events.emit('skillerSetPriorityType', {skillId: skillId, priorityType: priorityTypes.custom.id});
                 await storeConfig(skillerStore.config);
@@ -174,7 +173,7 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
 
         events.on('skillerSetPriorityType', value => {
             let skillId = value.skillId;
-            let selectedRealm = skillerStore.config[skillId].selectedRealm;
+            let selectedRealm = game.currentRealm.id;
 
             setTimeout(() => {
                 reDisableActions(skillId, selectedRealm);
@@ -252,7 +251,7 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                 store: skillerStore,
                 skillId: skillId,
                 mounted(skillId) {
-                    let selectedRealm = skillerStore.config[skillId].selectedRealm;
+                    let selectedRealm = game.currentRealm.id;
                     let priorityType = skillerStore.config[skillId].priorityType;
 
                     reDisableActions(skillId, selectedRealm);
