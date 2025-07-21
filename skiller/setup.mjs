@@ -73,7 +73,7 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
             getActions(skillId) {
                 let priorityType = skillerStore.config[skillId].priorityType;
                 let selectedRealm = game.currentRealm.id;
-                let retArray = [...SKILL_ACTIONS[skillId][selectedRealm]];
+                let retArray = SKILL_ACTIONS[skillId].hasOwnProperty(selectedRealm) ? [...SKILL_ACTIONS[skillId][selectedRealm]] : [];
                 if (priorityType === priorityTypes.mastery.id) {
                     return retArray.filter(a => getMasteryLevel(skillId, getAction(skillId, a.action.id)) < 99)
                         .sort((a, b) => getMasteryXP(skillId, getAction(skillId, b.action.id)) - getMasteryXP(skillId, getAction(skillId, a.action.id)));
@@ -109,8 +109,8 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                     return [priorityTypes.custom, priorityTypes.bestXP].includes(priorityType)
                         || (priorityType === priorityTypes.lowestQuantity && skill.includeQuantity)
                         || (priorityType === priorityTypes.sellsFor && skill.includeSellsFor)
-                        || (skill.hasMastery && !skillerStore.config[skillId][selectedRealm].masteryDone && [priorityTypes.mastery, priorityTypes.masteryLow].includes(priorityType))
-                        || (skill.hasIntensity && !skillerStore.config[skillId][selectedRealm].intensityDone && [priorityTypes.intensity, priorityTypes.intensityLow].includes(priorityType));
+                        || (skillerStore.config[skillId].hasOwnProperty(selectedRealm) && skill.hasMastery && !skillerStore.config[skillId][selectedRealm].masteryDone && [priorityTypes.mastery, priorityTypes.masteryLow].includes(priorityType))
+                        || (skillerStore.config[skillId].hasOwnProperty(selectedRealm) && skill.hasIntensity && !skillerStore.config[skillId][selectedRealm].intensityDone && [priorityTypes.intensity, priorityTypes.intensityLow].includes(priorityType));
                 }
 
                 return Object.values(priorityTypes).filter(priorityTypeFilter)
@@ -168,6 +168,20 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                 events.emit('skillerSetPriorityType', {skillId: skillId, priorityType: priorityTypes.custom.id});
                 await storeConfig(skillerStore.config);
             },
+            async toggleRunesOrBarsOnly(skillId) {
+                let selectedRealm = game.currentRealm.id;
+                skillerStore.config[skillId].runesOrBarsOnly = !skillerStore.config[skillId].runesOrBarsOnly;
+                if (skillerStore.config[skillId].runesOrBarsOnly) {
+                    skillerStore.config[skillId][selectedRealm].disabledActions = [...SKILL_ACTIONS[skillId][selectedRealm]
+                        .filter(a => skillId === 'smithing' && !a.action.localID.includes('_Bar')
+                            || skillId === 'runecrafting' && !a.action.localID.includes('_Rune'))
+                        .map(a => a.idx)];
+                } else {
+                    skillerStore.config[skillId][selectedRealm].disabledActions = []
+                }
+                reDisableActions(skillId, selectedRealm);
+                await storeConfig(skillerStore.config);
+            }
         });
         skillerMod['store'] = skillerStore;
 
@@ -234,13 +248,15 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                     },
                 });
 
-                skillerStore.sortables[skillId].sort(skillerStore.config[skillId][selectedRealm].priority, true);
+                let priority = skillerStore.config[skillId].hasOwnProperty(selectedRealm) ? skillerStore.config[skillId][selectedRealm].priority : [];
+                skillerStore.sortables[skillId].sort(priority, true);
             }
         }
 
         function reDisableActions(skillId, selectedRealm) {
             $(`[id*="${skillId}-actionItem"]`).css('opacity', 1);
-            skillerStore.config[skillId][selectedRealm].disabledActions.forEach(i => {
+            let disabledActions = skillerStore.config[skillId].hasOwnProperty(selectedRealm) ? skillerStore.config[skillId][selectedRealm].disabledActions : [];
+            disabledActions.forEach(i => {
                 $(`#${skillId}-actionItem-${i}`).css('opacity', 0.25);
             });
         }

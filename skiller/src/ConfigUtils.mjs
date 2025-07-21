@@ -10,7 +10,7 @@ const {
 } = await loadModule('src/Consts.mjs');
 const {getMasteryLevel} = await loadModule('src/Utils.mjs');
 
-const configVersion = 3;
+const configVersion = 4;
 
 async function compress(string, encoding) {
     const byteArray = new TextEncoder().encode(string);
@@ -88,6 +88,10 @@ function initConfig() {
             collapsed: true,
             priorityType: priorityTypes.custom.id
         };
+
+        if (skill.id === 'runecrafting' || skill.id === 'smithing') {
+            config[skill.id].runesOrBarsOnly = false;
+        }
 
         game.realms.allObjects.forEach(realm => {
             let actions = tmpActions.filter(a => a.action.realm.id === realm.id);

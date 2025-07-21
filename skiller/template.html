@@ -34,6 +34,12 @@
                                :checked="priorityType.id === store.config[skillId].priorityType">
                         <label class="custom-control-label" :for="skillId + '-prioritytype-' + priorityType.id">{{priorityType.description}}</label>
                     </div>
+                    <div class="custom-control custom-switch custom-control-inline" v-if="skillId === 'runecrafting' || skillId === 'smithing'">
+                        <input @click="store.toggleRunesOrBarsOnly(skillId)" type="checkbox"
+                               class="custom-control-input" :id="skillId + '-runesOrBarsOnly'" :name="skillId + '-runesOrBarsOnly'"
+                               :checked="store.config[skillId].runesOrBarsOnly">
+                        <label class="custom-control-label" :for="skillId + '-runesOrBarsOnly'">{{skillId === 'smithing' ? 'Only Bars' : 'Only Runes'}}</label>
+                    </div>
                 </div>
                 <div class="block-content" style="padding-top: 12px" v-show="!store.config[skillId].collapsed">
                     <div :id="skillId + '-prioritySettings'"
@@ -56,12 +62,6 @@
                 </div>
                 <div class="block-content d-flex" v-if="store.skillerDebug">
                     {{store.config[skillId]}}
-                </div>
-                <div class="block-content d-flex" v-if="store.skillerDebug">
-                    <button @click="store.realmChange(skillId, realm.id)" class="btn btn-primary locked"
-                            v-for="realm in game.realms.allObjects" style="margin-right: 12px">
-                        <img :src="realm.media" width="30" height="30"/>
-                    </button>
                 </div>
             </div>
         </div>
