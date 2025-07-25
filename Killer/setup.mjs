@@ -11,6 +11,13 @@ export async function setup({settings, onCharacterLoaded, patch}) {
     });
     settings.section('General').add({
         type: 'switch',
+        label: 'unpause Bosses',
+        hint: 'Auto resume combat when boss is spawned and combat is paused',
+        name: 'bossesAutoResume',
+        default: false,
+    });
+    settings.section('General').add({
+        type: 'switch',
         label: 'HP',
         hint: 'Change min/max hit value',
         name: 'changeHitpoints',
@@ -91,6 +98,11 @@ export async function setup({settings, onCharacterLoaded, patch}) {
                 }
 
                 _events.emit('hitpointsChanged', new HitpointsChangedEvent(oldCurrent, oldMax, game.combat.player.hitpoints, game.combat.player.stats.maxHitpoints));
+            }
+        });
+        patch(CombatManager, 'spawnEnemy').after(function () {
+            if (settings.section('General').get('bossesAutoResume') && game.combat.paused && game.combat.enemy.isBoss) {
+                game.combat.resumeDungeon();
             }
         });
     });
