@@ -13,13 +13,18 @@ const {
 } = await loadModule('src/Utils.mjs');
 
 let actCheckCount = 0;
-const checkThresh = 5000;
+let checkThreshMultiplier = settings.section('General').get('checkThreshMultiplier') || 10;
 
-//TODO: thieving undiscovered items (thieving2:900-966)
-//TODO: runecrafting only runes ()
-//TODO: smithing only bars ()
-//TODO: summoning? from multiple recipes select best one ?????
-//TODO: archaeology????????????
+//TODO: thieving undiscovered items (thieving2:900-966, const found = game.stats.itemFindCount(item); npc.lootTable.sortedDropsArray, area.uniqueDrops, npc.uniqueDrop, game.thieving.generalRareItems)
+//TODO: archaeology???????????? (const found = game.stats.itemFindCount(item);)
+function multiplyRecipeCostsAndCheckIfOwned(recipeCosts) {
+    console.log(recipeCosts)
+    recipeCosts._items.forEach((k, v) => {
+        recipeCosts.addItem(v, (k * checkThreshMultiplier) - k);
+    })
+    console.log(recipeCosts, recipeCosts.checkIfOwned())
+    return recipeCosts.checkIfOwned()
+}
 
 //methods
 function checkAction(skillId, action) {
@@ -36,10 +41,10 @@ function checkAction(skillId, action) {
             && ((action.area.poiRequirement && action.area.poiRequirement.isMet()) || !action.area.poiRequirement)
             && isBasicUnlockedAndSameRealm;
     } else if (skillId === 'firemaking') {
-        return bankQty(action.log) > 0
+        return bankQty(action.log) > checkThreshMultiplier
             && isBasicUnlockedAndSameRealm;
     } else if (skillId === 'cooking') {
-        return game[skillId].getRecipeCosts(action).checkIfOwned()
+        return multiplyRecipeCostsAndCheckIfOwned(game[skillId].getRecipeCosts(action))
             && ((action.category.upgradeRequired && action.category.upgradeOwned) || !action.category.upgradeRequired)
             && isBasicUnlockedAndSameRealm;
     } else if (skillId === 'mining') {
@@ -56,9 +61,14 @@ function checkAction(skillId, action) {
     } else if (skillId === 'harvesting') {
         return game[skillId].canHarvestVein(action)
             && action.realm.id === selectedRealm;
+    } else if (skillId === 'summoning') {
+        return (multiplyRecipeCostsAndCheckIfOwned(game[skillId].getRecipeCosts(action))
+            || (action.nonShardItemCosts.length > 0
+                && action.nonShardItemCosts.some(i => multiplyRecipeCostsAndCheckIfOwned(game[skillId].getAltRecipeCosts(action, i)))))
+            && isBasicUnlockedAndSameRealm;
     }
 
-    return game[skillId].getRecipeCosts(action).checkIfOwned() && isBasicUnlockedAndSameRealm;
+    return  multiplyRecipeCostsAndCheckIfOwned(game[skillId].getRecipeCosts(action)) && isBasicUnlockedAndSameRealm;
 }
 
 function getBestAction(skill) {
@@ -137,6 +147,7 @@ function patchSkill(skillId) {
 
     if (skillerMod.config[skillId].enabled) {
         try {
+            let checkThresh = game[skillId].actionInterval * checkThreshMultiplier;
             actCheckCount += game[skillId].actionInterval;
 
             if (skillId === 'woodcutting' && actCheckCount >= checkThresh) {
@@ -218,6 +229,26 @@ function patchSkill(skillId) {
                 }
 
                 actCheckCount = 0;
+            } else if (skillId === 'summoning' && actCheckCount >= checkThresh) {
+                const bestAction = getBestAction(skill);
+                let bestNonShardCost = undefined;
+
+                if (bestAction !== undefined) {
+                    bestNonShardCost = bestAction.nonShardItemCosts.findLast(i => multiplyRecipeCostsAndCheckIfOwned(game[skillId].getAltRecipeCosts(bestAction, i)));
+                }
+
+                if (bestAction !== undefined && game[skillId].activeRecipe.id !== bestAction.id) {
+                    game[skillId].selectRecipeOnClick(bestAction);
+                    if (bestNonShardCost !== undefined) {
+                        game[skillId].selectNonShardCostOnClick(bestAction.nonShardItemCosts.indexOf(bestNonShardCost))
+                    }
+                    game[skillId].createButtonOnClick();
+                } else if(bestAction !== undefined && game[skillId].activeRecipe.id === bestAction.id && bestNonShardCost !== undefined && game[skillId].activeNonShardCost.id !== bestNonShardCost.id) {
+                    game[skillId].selectNonShardCostOnClick(bestAction.nonShardItemCosts.indexOf(bestNonShardCost));
+                    game[skillId].createButtonOnClick();
+                }
+
+                actCheckCount = 0;
             } else if (!skill.hasOwnPatch && (!checkAction(skillId, game[skillId].activeRecipe) || actCheckCount >= checkThresh)) {
                 const bestAction = getBestAction(skill);
 
@@ -229,7 +260,7 @@ function patchSkill(skillId) {
                 actCheckCount = 0;
             }
         } catch (err) {
-            console.log({msg: `[Skiller] encountered an error`, exception: err})
+            console.error({msg: `[Skiller] encountered an error`, exception: err})
         }
     }
 }
@@ -278,9 +309,12 @@ patch(Herblore, 'postAction').after(function () {
     patchSkill('herblore')
 });
 
-
 patch(Astrology, 'postAction').after(function () {
     patchSkill('astrology')
+});
+
+patch(Summoning, 'postAction').after(function () {
+    patchSkill('summoning')
 });
 
 if (hasItA) {

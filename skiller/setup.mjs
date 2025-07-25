@@ -39,8 +39,15 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
         type: 'number',
         name: 'thievingSuccessRate',
         label: 'Pickpocket on equal or greater than set success rate',
-        hint: 'Don\'t pickpocket things that can kill you unless success rate is 100%, by changing it lower NPC may kill if not successful, default : 100',
+        hint: 'Don\'t pickpocket things that can kill you unless success rate is 100%, by changing it lower NPC may kill if not successful. default : 100',
         default: 100
+    });
+    settings.section('General').add({
+        type: 'number',
+        name: 'checkThreshMultiplier',
+        label: 'Action check threshold multiplier',
+        hint: createElement('span', { children: ['How many actions before rechecking best action for skill, check that you have materials in bank for next x actions also. default : 10', createElement('br'), createElement('span', { className: 'text-danger', attributes: [['style', 'font-weight: bolder !important;']], text: 'NOTE Requires a reload to take effect.' })]}),
+        default: 10
     });
     settings.section('Debug').add({
         type: 'switch',

@@ -129,6 +129,16 @@ export const SKILLS = [
         hasIntensity: true,
         includeSellsFor: false
     },
+    {
+        id: 'summoning',
+        name: 'Summoning',
+        hasOwnPatch: true,
+        includeQuantity: true,
+        returnMultiple: false,
+        hasMastery: true,
+        hasIntensity: false,
+        includeSellsFor: true
+    }
 ];
 
 export const priorityTypes = {

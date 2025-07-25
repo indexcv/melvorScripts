@@ -10,7 +10,7 @@ const {
 } = await loadModule('src/Consts.mjs');
 const {getMasteryLevel} = await loadModule('src/Utils.mjs');
 
-const configVersion = 4;
+const configVersion = 5;
 
 async function compress(string, encoding) {
     const byteArray = new TextEncoder().encode(string);
