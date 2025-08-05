@@ -10,7 +10,7 @@ const {
 } = await loadModule('src/Consts.mjs');
 const {getMasteryLevel} = await loadModule('src/Utils.mjs');
 
-const configVersion = 5;
+const configVersion = 6;
 
 async function compress(string, encoding) {
     const byteArray = new TextEncoder().encode(string);
@@ -91,6 +91,10 @@ function initConfig() {
 
         if (skill.id === 'runecrafting' || skill.id === 'smithing') {
             config[skill.id].runesOrBarsOnly = false;
+        }
+
+        if (skill.id === 'thieving') {
+            config[skill.id].notFoundOnly = false;
         }
 
         game.realms.allObjects.forEach(realm => {

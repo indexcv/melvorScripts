@@ -188,6 +188,26 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                 }
                 reDisableActions(skillId, selectedRealm);
                 await storeConfig(skillerStore.config);
+            },
+            async toggleNotFoundOnly(skillId) {
+                let selectedRealm = game.currentRealm.id;
+                skillerStore.config[skillId].notFoundOnly = !skillerStore.config[skillId].notFoundOnly;
+                if (skillerStore.config[skillId].notFoundOnly) {
+                    skillerStore.config[skillId][selectedRealm].disabledActions = SKILL_ACTIONS[skillId][selectedRealm]
+                        .filter(a => {
+                            let generalRareItems = [...game[skillId].generalRareItems.filter(s => (s.realms.size === 0 || s.realms.has(a.action.realm)) && (s.npcs === undefined || s.npcs.has(a.action))).map(i => i.item)]
+                            let commonItems = [...a.action.lootTable.sortedDropsArray.map(i => i.item)]
+                            let areaUniqueItems = [...a.action.area.uniqueDrops.map(i => i.item)]
+                            let npcUniqueItem = a.action.uniqueDrop ? [a.action.uniqueDrop.item] : []
+                            let items = [...generalRareItems, ...commonItems, ...areaUniqueItems, ...npcUniqueItem];
+                            return !items.some(i => game.stats.itemFindCount(i) === 0);
+                        })
+                        .map(a => a.idx);
+                } else {
+                    skillerStore.config[skillId][selectedRealm].disabledActions = [];
+                }
+                reDisableActions(skillId, selectedRealm);
+                await storeConfig(skillerStore.config);
             }
         });
         skillerMod['store'] = skillerStore;

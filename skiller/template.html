@@ -40,6 +40,12 @@
                                :checked="store.config[skillId].runesOrBarsOnly">
                         <label class="custom-control-label" :for="skillId + '-runesOrBarsOnly'">{{skillId === 'smithing' ? 'Only Bars' : 'Only Runes'}}</label>
                     </div>
+                    <div class="custom-control custom-switch custom-control-inline" v-if="skillId === 'thieving'">
+                        <input @click="store.toggleNotFoundOnly(skillId)" type="checkbox"
+                               class="custom-control-input" :id="skillId + '-notFoundOnly'" :name="skillId + '-notFoundOnly'"
+                               :checked="store.config[skillId].notFoundOnly">
+                        <label class="custom-control-label" :for="skillId + '-notFoundOnly'">Only not found drops</label>
+                    </div>
                 </div>
                 <div class="block-content" style="padding-top: 12px" v-show="!store.config[skillId].collapsed">
                     <div :id="skillId + '-prioritySettings'"

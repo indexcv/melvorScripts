@@ -15,14 +15,11 @@ const {
 let actCheckCount = 0;
 let checkThreshMultiplier = settings.section('General').get('checkThreshMultiplier') || 10;
 
-//TODO: thieving undiscovered items (thieving2:900-966, const found = game.stats.itemFindCount(item); npc.lootTable.sortedDropsArray, area.uniqueDrops, npc.uniqueDrop, game.thieving.generalRareItems)
 //TODO: archaeology???????????? (const found = game.stats.itemFindCount(item);)
 function multiplyRecipeCostsAndCheckIfOwned(recipeCosts) {
-    console.log(recipeCosts)
     recipeCosts._items.forEach((k, v) => {
         recipeCosts.addItem(v, (k * checkThreshMultiplier) - k);
     })
-    console.log(recipeCosts, recipeCosts.checkIfOwned())
     return recipeCosts.checkIfOwned()
 }
 
