@@ -38,13 +38,13 @@
                         <input @click="store.toggleRunesOrBarsOnly(skillId)" type="checkbox"
                                class="custom-control-input" :id="skillId + '-runesOrBarsOnly'" :name="skillId + '-runesOrBarsOnly'"
                                :checked="store.config[skillId].runesOrBarsOnly">
-                        <label class="custom-control-label" :for="skillId + '-runesOrBarsOnly'">{{skillId === 'smithing' ? 'Only Bars' : 'Only Runes'}}</label>
+                        <label class="custom-control-label" :for="skillId + '-runesOrBarsOnly'">Only {{skillId === 'smithing' ? 'Bars' : 'Runes'}}</label>
                     </div>
-                    <div class="custom-control custom-switch custom-control-inline" v-if="skillId === 'thieving'">
+                    <div class="custom-control custom-switch custom-control-inline" v-if="skillId === 'thieving' || skillId === 'archaeology'">
                         <input @click="store.toggleNotFoundOnly(skillId)" type="checkbox"
                                class="custom-control-input" :id="skillId + '-notFoundOnly'" :name="skillId + '-notFoundOnly'"
                                :checked="store.config[skillId].notFoundOnly">
-                        <label class="custom-control-label" :for="skillId + '-notFoundOnly'">Only not found drops</label>
+                        <label class="custom-control-label" :for="skillId + '-notFoundOnly'">Only not found {{skillId === 'thieving' ? 'Drops' : 'Artefacts'}}</label>
                     </div>
                 </div>
                 <div class="block-content" style="padding-top: 12px" v-show="!store.config[skillId].collapsed">

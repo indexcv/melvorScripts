@@ -1,21 +1,12 @@
 const {loadModule, patch, settings} = mod.getContext(import.meta);
-const {
-    SKILLS,
-    priorityTypes,
-    hasItA
-} = await loadModule('src/Consts.mjs');
-const {
-    getMasteryLevel,
-    getMasteryXP,
-    getXPRate,
-    bankQty,
-    getProduct
-} = await loadModule('src/Utils.mjs');
+const {SKILLS, priorityTypes, hasAoD, hasItA} = await loadModule('src/Consts.mjs');
+const {getMasteryLevel, getMasteryXP, getXPRate, bankQty, getProduct} = await loadModule('src/Utils.mjs');
 
 let actCheckCount = 0;
 let checkThreshMultiplier = settings.section('General').get('checkThreshMultiplier') || 10;
 
 //TODO: archaeology???????????? (const found = game.stats.itemFindCount(item);)
+//TODO: cartography???????????? catyography:L1778 mapUpgradeAction()
 function multiplyRecipeCostsAndCheckIfOwned(recipeCosts) {
     recipeCosts._items.forEach((k, v) => {
         recipeCosts.addItem(v, (k * checkThreshMultiplier) - k);
@@ -53,16 +44,19 @@ function checkAction(skillId, action) {
         //Don't pickpocket things that can kill you unless success rate is 100%
         return !(game.combat.player.autoEatThreshold < maxHit && game[skillId].getNPCSuccessRate(action) < settings.section('General').get('thievingSuccessRate'))
             && isBasicUnlockedAndSameRealm;
+    } else if (skillId === 'summoning') {
+        return (multiplyRecipeCostsAndCheckIfOwned(game[skillId].getRecipeCosts(action))
+                || (action.nonShardItemCosts.length > 0
+                    && action.nonShardItemCosts.some(i => multiplyRecipeCostsAndCheckIfOwned(game[skillId].getAltRecipeCosts(action, i)))))
+            && isBasicUnlockedAndSameRealm;
     } else if (skillId === 'astrology') {
         return isBasicUnlockedAndSameRealm;
+    } else if (skillId === 'archaeology') {
+        return game[skillId].canExcavate(action)
+            && isBasicUnlockedAndSameRealm;
     } else if (skillId === 'harvesting') {
         return game[skillId].canHarvestVein(action)
             && action.realm.id === selectedRealm;
-    } else if (skillId === 'summoning') {
-        return (multiplyRecipeCostsAndCheckIfOwned(game[skillId].getRecipeCosts(action))
-            || (action.nonShardItemCosts.length > 0
-                && action.nonShardItemCosts.some(i => multiplyRecipeCostsAndCheckIfOwned(game[skillId].getAltRecipeCosts(action, i)))))
-            && isBasicUnlockedAndSameRealm;
     }
 
     return  multiplyRecipeCostsAndCheckIfOwned(game[skillId].getRecipeCosts(action)) && isBasicUnlockedAndSameRealm;
@@ -210,22 +204,6 @@ function patchSkill(skillId) {
                 }
 
                 actCheckCount = 0;
-            } else if (skillId === 'astrology' && actCheckCount >= checkThresh) {
-                const bestAction = getBestAction(skill);
-
-                if (bestAction !== undefined && game[skillId].activeConstellation.id !== bestAction.id) {
-                    game[skillId].studyConstellationOnClick(bestAction);
-                }
-
-                actCheckCount = 0;
-            } else if (skillId === 'harvesting' && actCheckCount >= checkThresh) {
-                const bestAction = getBestAction(skill);
-
-                if (bestAction !== undefined && game[skillId].activeVein.id !== bestAction.id) {
-                    game[skillId].onVeinClick(bestAction);
-                }
-
-                actCheckCount = 0;
             } else if (skillId === 'summoning' && actCheckCount >= checkThresh) {
                 const bestAction = getBestAction(skill);
                 let bestNonShardCost = undefined;
@@ -243,6 +221,30 @@ function patchSkill(skillId) {
                 } else if(bestAction !== undefined && game[skillId].activeRecipe.id === bestAction.id && bestNonShardCost !== undefined && game[skillId].activeNonShardCost.id !== bestNonShardCost.id) {
                     game[skillId].selectNonShardCostOnClick(bestAction.nonShardItemCosts.indexOf(bestNonShardCost));
                     game[skillId].createButtonOnClick();
+                }
+
+                actCheckCount = 0;
+            } else if (skillId === 'astrology' && actCheckCount >= checkThresh) {
+                const bestAction = getBestAction(skill);
+
+                if (bestAction !== undefined && game[skillId].activeConstellation.id !== bestAction.id) {
+                    game[skillId].studyConstellationOnClick(bestAction);
+                }
+
+                actCheckCount = 0;
+            } else if(skillId === 'archaeology' && actCheckCount >= checkThresh) {
+                const bestAction = getBestAction(skill);
+
+                if (bestAction !== undefined && game[skillId].currentDigSite.id !== bestAction.id) {
+                    game[skillId].startDigging(bestAction);
+                }
+
+                actCheckCount = 0;
+            } else if (skillId === 'harvesting' && actCheckCount >= checkThresh) {
+                const bestAction = getBestAction(skill);
+
+                if (bestAction !== undefined && game[skillId].activeVein.id !== bestAction.id) {
+                    game[skillId].onVeinClick(bestAction);
                 }
 
                 actCheckCount = 0;
@@ -306,13 +308,19 @@ patch(Herblore, 'postAction').after(function () {
     patchSkill('herblore')
 });
 
+patch(Summoning, 'postAction').after(function () {
+    patchSkill('summoning')
+});
+
 patch(Astrology, 'postAction').after(function () {
     patchSkill('astrology')
 });
 
-patch(Summoning, 'postAction').after(function () {
-    patchSkill('summoning')
-});
+if (hasAoD) {
+    patch(Archaeology, 'postAction').after(function () {
+        patchSkill('archaeology')
+    });
+}
 
 if (hasItA) {
     patch(Harvesting, 'postAction').after(function () {

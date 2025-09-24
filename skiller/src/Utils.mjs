@@ -28,6 +28,8 @@ function getXPRate(skillId, action) {
         return XP / game[skillId].getRecipeCookingInterval(action)
     } else if (skillId === 'astrology') {
         return XP / game[skillId].getConstellationInterval(action);
+    } else if (skillId === 'archaeology') {
+        return game[skillId].getBaseSkillXPForDigSite(action) / game[skillId].getDigSiteInterval(action);
     }
 
     return XP / game[skillId].modifyInterval(game[skillId].baseInterval, action);

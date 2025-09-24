@@ -110,8 +110,28 @@ export const SKILLS = [
         includeSellsFor: true
     },
     {
+        id: 'summoning',
+        name: 'Summoning',
+        hasOwnPatch: true,
+        includeQuantity: true,
+        returnMultiple: false,
+        hasMastery: true,
+        hasIntensity: false,
+        includeSellsFor: true
+    },
+    {
         id: 'astrology',
         name: 'Astrology',
+        hasOwnPatch: true,
+        includeQuantity: false,
+        returnMultiple: false,
+        hasMastery: true,
+        hasIntensity: false,
+        includeSellsFor: false
+    },
+    {
+        id: 'archaeology',
+        name: 'Archaeology',
         hasOwnPatch: true,
         includeQuantity: false,
         returnMultiple: false,
@@ -128,16 +148,6 @@ export const SKILLS = [
         hasMastery: true,
         hasIntensity: true,
         includeSellsFor: false
-    },
-    {
-        id: 'summoning',
-        name: 'Summoning',
-        hasOwnPatch: true,
-        includeQuantity: true,
-        returnMultiple: false,
-        hasMastery: true,
-        hasIntensity: false,
-        includeSellsFor: true
     }
 ];
 
@@ -185,6 +195,8 @@ export const priorityTypes = {
 };
 
 export const SKILL_ACTIONS = {},
+    hasTot = cloudManager.hasTotHEntitlementAndIsEnabled,
+    hasAoD = cloudManager.hasAoDEntitlementAndIsEnabled,
     hasItA = cloudManager.hasItAEntitlementAndIsEnabled,
     melvorRealm = game.realms.getObjectByID('melvorD:Melvor'),
     abyssalRealm = hasItA && game.realms.getObjectByID('melvorItA:Abyssal'),

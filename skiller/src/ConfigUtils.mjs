@@ -1,16 +1,8 @@
 const {loadModule, characterStorage} = mod.getContext(import.meta);
-const {
-    priorityTypes,
-    SKILLS,
-    SKILL_ACTIONS,
-    hasItA,
-    abyssalRealm,
-    melvorRealm,
-    itARealms
-} = await loadModule('src/Consts.mjs');
+const {priorityTypes, SKILLS, SKILL_ACTIONS, hasItA, hasAoD, abyssalRealm, melvorRealm, itARealms} = await loadModule('src/Consts.mjs');
 const {getMasteryLevel} = await loadModule('src/Utils.mjs');
 
-const configVersion = 6;
+const configVersion = 7.1;
 
 async function compress(string, encoding) {
     const byteArray = new TextEncoder().encode(string);
@@ -74,7 +66,8 @@ function initConfig() {
     let config = {}
 
     SKILLS.forEach(skill => {
-        if (!hasItA && skill.id === 'harvesting') {
+        if ((!hasItA && skill.id === 'harvesting')
+            || (!hasAoD && skill.id === 'archaeology')) {
             return
         }
 
@@ -93,7 +86,7 @@ function initConfig() {
             config[skill.id].runesOrBarsOnly = false;
         }
 
-        if (skill.id === 'thieving') {
+        if (skill.id === 'thieving' || skill.id === 'archaeology') {
             config[skill.id].notFoundOnly = false;
         }
 

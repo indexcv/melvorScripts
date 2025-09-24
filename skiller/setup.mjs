@@ -1,24 +1,8 @@
 export async function setup({loadModule, settings, onCharacterLoaded, onInterfaceReady}) {
 
-    const {
-        storeConfig,
-        loadConfig,
-        initConfig
-    } = await loadModule('src/ConfigUtils.mjs');
-    const {
-        SKILLS,
-        priorityTypes,
-        SKILL_ACTIONS,
-        hasItA,
-    } = await loadModule('src/Consts.mjs');
-    const {
-        getAction,
-        getMasteryLevel,
-        getMasteryXP,
-        getXPRate,
-        bankQty,
-        getProduct
-    } = await loadModule('src/Utils.mjs');
+    const {storeConfig, loadConfig, initConfig} = await loadModule('src/ConfigUtils.mjs');
+    const {SKILLS, priorityTypes, SKILL_ACTIONS, hasItA,} = await loadModule('src/Consts.mjs');
+    const {getAction, getMasteryLevel, getMasteryXP, getXPRate, bankQty, getProduct} = await loadModule('src/Utils.mjs');
     const events = mitt();
 
     window.skillerMod = {
@@ -193,16 +177,27 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                 let selectedRealm = game.currentRealm.id;
                 skillerStore.config[skillId].notFoundOnly = !skillerStore.config[skillId].notFoundOnly;
                 if (skillerStore.config[skillId].notFoundOnly) {
-                    skillerStore.config[skillId][selectedRealm].disabledActions = SKILL_ACTIONS[skillId][selectedRealm]
-                        .filter(a => {
-                            let generalRareItems = [...game[skillId].generalRareItems.filter(s => (s.realms.size === 0 || s.realms.has(a.action.realm)) && (s.npcs === undefined || s.npcs.has(a.action))).map(i => i.item)]
-                            let commonItems = [...a.action.lootTable.sortedDropsArray.map(i => i.item)]
-                            let areaUniqueItems = [...a.action.area.uniqueDrops.map(i => i.item)]
-                            let npcUniqueItem = a.action.uniqueDrop ? [a.action.uniqueDrop.item] : []
-                            let items = [...generalRareItems, ...commonItems, ...areaUniqueItems, ...npcUniqueItem];
-                            return !items.some(i => game.stats.itemFindCount(i) === 0);
-                        })
-                        .map(a => a.idx);
+                    if (skillId === 'thieving') {
+                        skillerStore.config[skillId][selectedRealm].disabledActions = SKILL_ACTIONS[skillId][selectedRealm]
+                            .filter(a => {
+                                let generalRareItems = [...game[skillId].generalRareItems.filter(s => (s.realms.size === 0 || s.realms.has(a.action.realm)) && (s.npcs === undefined || s.npcs.has(a.action))).map(i => i.item)]
+                                let commonItems = [...a.action.lootTable.sortedDropsArray.map(i => i.item)]
+                                let areaUniqueItems = [...a.action.area.uniqueDrops.map(i => i.item)]
+                                let npcUniqueItem = a.action.uniqueDrop ? [a.action.uniqueDrop.item] : []
+                                let items = [...generalRareItems, ...commonItems, ...areaUniqueItems, ...npcUniqueItem];
+                                return !items.some(i => game.stats.itemFindCount(i) === 0);
+                            }).map(a => a.idx);
+                    } else if (skillId === 'archaeology') {
+                        skillerStore.config[skillId][selectedRealm].disabledActions = SKILL_ACTIONS[skillId][selectedRealm]
+                            .filter(a => {
+                                let tiny = [...a.action.artefacts.tiny.sortedDropsArray.map(i => i.item)];
+                                let small = [...a.action.artefacts.small.sortedDropsArray.map(i => i.item)];
+                                let medium = [...a.action.artefacts.medium.sortedDropsArray.map(i => i.item)];
+                                let large = [...a.action.artefacts.large.sortedDropsArray.map(i => i.item)];
+                                let items = [...tiny, ...small, ...medium, ...large];
+                                return !items.some(i => game.stats.itemFindCount(i) === 0);
+                            }).map(a => a.idx);
+                    }
                 } else {
                     skillerStore.config[skillId][selectedRealm].disabledActions = [];
                 }
