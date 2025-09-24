@@ -23,38 +23,47 @@ function checkAction(skillId, action) {
     if (skillId === 'woodcutting') {
         return game[skillId].isTreeUnlocked(action)
             && action.realm.id === selectedRealm;
-    } else if (skillId === 'fishing') {
+    }
+    else if (skillId === 'fishing') {
         return ((action.area.isSecret && game[skillId].secretAreaUnlocked) || !action.area.isSecret)
             && ((action.area.requiredItem && game.combat.player.equipment.checkForItem(action.area.requiredItem)) || !action.area.requiredItem)
             && ((action.area.poiRequirement && action.area.poiRequirement.isMet()) || !action.area.poiRequirement)
             && isBasicUnlockedAndSameRealm;
-    } else if (skillId === 'firemaking') {
+    }
+    else if (skillId === 'firemaking') {
         return bankQty(action.log) > checkThreshMultiplier
             && isBasicUnlockedAndSameRealm;
-    } else if (skillId === 'cooking') {
+    }
+    else if (skillId === 'cooking') {
         return multiplyRecipeCostsAndCheckIfOwned(game[skillId].getRecipeCosts(action))
             && ((action.category.upgradeRequired && action.category.upgradeOwned) || !action.category.upgradeRequired)
             && isBasicUnlockedAndSameRealm;
-    } else if (skillId === 'mining') {
+    }
+    else if (skillId === 'mining') {
         return game[skillId].canMineOre(action)
             && action.currentHP !== 0
             && action.realm.id === selectedRealm;
-    } else if (skillId === 'thieving') {
+    }
+    else if (skillId === 'thieving') {
         const maxHit = Math.floor(numberMultiplier * action.maxHit * (1 - game.combat.player.equipmentStats.damageReduction / 100));
         //Don't pickpocket things that can kill you unless success rate is 100%
         return !(game.combat.player.autoEatThreshold < maxHit && game[skillId].getNPCSuccessRate(action) < settings.section('General').get('thievingSuccessRate'))
             && isBasicUnlockedAndSameRealm;
-    } else if (skillId === 'summoning') {
+    }
+    else if (skillId === 'summoning') {
         return (multiplyRecipeCostsAndCheckIfOwned(game[skillId].getRecipeCosts(action))
                 || (action.nonShardItemCosts.length > 0
                     && action.nonShardItemCosts.some(i => multiplyRecipeCostsAndCheckIfOwned(game[skillId].getAltRecipeCosts(action, i)))))
             && isBasicUnlockedAndSameRealm;
-    } else if (skillId === 'astrology') {
+    }
+    else if (skillId === 'astrology') {
         return isBasicUnlockedAndSameRealm;
-    } else if (skillId === 'archaeology') {
+    }
+    else if (skillId === 'archaeology') {
         return game[skillId].canExcavate(action)
             && isBasicUnlockedAndSameRealm;
-    } else if (skillId === 'harvesting') {
+    }
+    else if (skillId === 'harvesting') {
         return game[skillId].canHarvestVein(action)
             && action.realm.id === selectedRealm;
     }
@@ -81,7 +90,8 @@ function getBestAction(skill) {
         if (actions.length === 0) {
             skillerMod.store.setPriorityType(skillId, priorityTypes.bestXP.id)
         }
-    } else if (!skillerMod.config[skillId][selectedRealm].mastery && priorityType === priorityTypes.masteryLow.id) {
+    }
+    else if (!skillerMod.config[skillId][selectedRealm].mastery && priorityType === priorityTypes.masteryLow.id) {
         actions = game[skillId].actions
             .filter(thisAction => thisAction.realm.id === selectedRealm && !disabledActions.includes(thisAction) && checkAction(skillId, thisAction) && getMasteryLevel(skillId, thisAction) < 99)
             .sort((a, b) => getMasteryXP(skillId, a) - getMasteryXP(skillId, b));
@@ -92,17 +102,21 @@ function getBestAction(skill) {
         if (actions.length === 0) {
             skillerMod.store.setPriorityType(skillId, priorityTypes.bestXP.id)
         }
-    } else if (skill.includeQuantity && priorityType === priorityTypes.lowestQuantity.id) {
+    }
+    else if (skill.includeQuantity && priorityType === priorityTypes.lowestQuantity.id) {
         actions = game[skillId].actions
             .filter(thisAction => thisAction.realm.id === selectedRealm && !disabledActions.includes(thisAction) && checkAction(skillId, thisAction))
             .sort((a, b) => bankQty(getProduct(skillId, a)) - bankQty(getProduct(skillId, b)));
-    } else if (priorityType === priorityTypes.bestXP.id) {
+    }
+    else if (priorityType === priorityTypes.bestXP.id) {
         actions = game[skillId].actions
             .filter(thisAction => thisAction.realm.id === selectedRealm && !disabledActions.includes(thisAction) && checkAction(skillId, thisAction))
             .sort((a, b) => getXPRate(skillId, b) - getXPRate(skillId, a));
-    } else if (priorityType === priorityTypes.custom.id) {
+    }
+    else if (priorityType === priorityTypes.custom.id) {
         actions = priority.filter(thisAction => thisAction.realm.id === selectedRealm && !disabledActions.includes(thisAction) && checkAction(skillId, thisAction));
-    } else if (priorityType === priorityTypes.intensity.id) {
+    }
+    else if (priorityType === priorityTypes.intensity.id) {
         actions = game[skillId].actions
             .filter(thisAction => thisAction.realm.id === selectedRealm && !disabledActions.includes(thisAction) && checkAction(skillId, thisAction) && thisAction.intensityPercent < 100)
             .sort((a, b) => b.intensityPercent - a.intensityPercent);
@@ -113,7 +127,8 @@ function getBestAction(skill) {
         if (actions.length === 0) {
             skillerMod.store.setPriorityType(skillId, priorityTypes.bestXP.id)
         }
-    } else if (priorityType === priorityTypes.intensityLow.id) {
+    }
+    else if (priorityType === priorityTypes.intensityLow.id) {
         actions = game[skillId].actions
             .filter(thisAction => thisAction.realm.id === selectedRealm && !disabledActions.includes(thisAction) && checkAction(skillId, thisAction) && thisAction.intensityPercent < 100)
             .sort((a, b) => a.intensityPercent - b.intensityPercent);
@@ -160,7 +175,8 @@ function patchSkill(skillId) {
                 }
 
                 actCheckCount = 0;
-            } else if (skillId === 'fishing' && actCheckCount >= checkThresh) {
+            }
+            else if (skillId === 'fishing' && actCheckCount >= checkThresh) {
                 const bestAction = getBestAction(skill);
 
                 if (bestAction !== undefined && game[skillId].activeFish.id !== bestAction.id) {
@@ -169,7 +185,8 @@ function patchSkill(skillId) {
                 }
 
                 actCheckCount = 0;
-            } else if (skillId === 'firemaking' && (!checkAction(skillId, game[skillId].activeRecipe) || actCheckCount >= checkThresh)) {
+            }
+            else if (skillId === 'firemaking' && (!checkAction(skillId, game[skillId].activeRecipe) || actCheckCount >= checkThresh)) {
                 const bestAction = getBestAction(skill);
 
                 if (bestAction !== undefined && game[skillId].activeRecipe.id !== bestAction.id) {
@@ -178,7 +195,8 @@ function patchSkill(skillId) {
                 }
 
                 actCheckCount = 0;
-            } else if (skillId === 'cooking' && (!checkAction(skillId, game[skillId].activeRecipe) || actCheckCount >= checkThresh)) {
+            }
+            else if (skillId === 'cooking' && (!checkAction(skillId, game[skillId].activeRecipe) || actCheckCount >= checkThresh)) {
                 const bestAction = getBestAction(skill);
 
                 if (bestAction !== undefined && game[skillId].activeRecipe.id !== bestAction.id) {
@@ -187,7 +205,8 @@ function patchSkill(skillId) {
                 }
 
                 actCheckCount = 0;
-            } else if (skillId === 'mining' && (game[skillId].activeRock.currentHP === 0 || actCheckCount >= checkThresh)) {
+            }
+            else if (skillId === 'mining' && (game[skillId].activeRock.currentHP === 0 || actCheckCount >= checkThresh)) {
                 const bestAction = getBestAction(skill);
 
                 if (bestAction !== undefined && game[skillId].activeRock.id !== bestAction.id) {
@@ -195,7 +214,8 @@ function patchSkill(skillId) {
                 }
 
                 actCheckCount = 0;
-            } else if (skillId === 'thieving' && !game[skillId].isStunned && actCheckCount >= checkThresh) {
+            }
+            else if (skillId === 'thieving' && !game[skillId].isStunned && actCheckCount >= checkThresh) {
                 const bestAction = getBestAction(skill);
 
                 if (bestAction !== undefined && game[skillId].currentNPC.id !== bestAction.id) {
@@ -204,7 +224,8 @@ function patchSkill(skillId) {
                 }
 
                 actCheckCount = 0;
-            } else if (skillId === 'summoning' && actCheckCount >= checkThresh) {
+            }
+            else if (skillId === 'summoning' && actCheckCount >= checkThresh) {
                 const bestAction = getBestAction(skill);
                 let bestNonShardCost = undefined;
 
@@ -224,7 +245,8 @@ function patchSkill(skillId) {
                 }
 
                 actCheckCount = 0;
-            } else if (skillId === 'astrology' && actCheckCount >= checkThresh) {
+            }
+            else if (skillId === 'astrology' && actCheckCount >= checkThresh) {
                 const bestAction = getBestAction(skill);
 
                 if (bestAction !== undefined && game[skillId].activeConstellation.id !== bestAction.id) {
@@ -232,7 +254,8 @@ function patchSkill(skillId) {
                 }
 
                 actCheckCount = 0;
-            } else if(skillId === 'archaeology' && actCheckCount >= checkThresh) {
+            }
+            else if(skillId === 'archaeology' && actCheckCount >= checkThresh) {
                 const bestAction = getBestAction(skill);
 
                 if (bestAction !== undefined && game[skillId].currentDigSite.id !== bestAction.id) {
@@ -240,7 +263,8 @@ function patchSkill(skillId) {
                 }
 
                 actCheckCount = 0;
-            } else if (skillId === 'harvesting' && actCheckCount >= checkThresh) {
+            }
+            else if (skillId === 'harvesting' && actCheckCount >= checkThresh) {
                 const bestAction = getBestAction(skill);
 
                 if (bestAction !== undefined && game[skillId].activeVein.id !== bestAction.id) {
@@ -248,7 +272,8 @@ function patchSkill(skillId) {
                 }
 
                 actCheckCount = 0;
-            } else if (!skill.hasOwnPatch && (!checkAction(skillId, game[skillId].activeRecipe) || actCheckCount >= checkThresh)) {
+            }
+            else if (!skill.hasOwnPatch && (!checkAction(skillId, game[skillId].activeRecipe) || actCheckCount >= checkThresh)) {
                 const bestAction = getBestAction(skill);
 
                 if (bestAction !== undefined && game[skillId].activeRecipe.id !== bestAction.id) {

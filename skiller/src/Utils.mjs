@@ -20,15 +20,20 @@ function getXPRate(skillId, action) {
 
     if (skillId === 'woodcutting') {
         return XP / game[skillId].getTreeInterval(action);
-    } else if (skillId === 'fishing') {
+    }
+    else if (skillId === 'fishing') {
         return XP / ((game[skillId].getMinFishInterval(action) + game[skillId].getMaxFishInterval(action)) * 0.5);
-    } else if (skillId === 'firemaking') {
+    }
+    else if (skillId === 'firemaking') {
         return XP / game[skillId].modifyInterval(action.baseInterval, action);
-    } else if (skillId === 'cooking') {
+    }
+    else if (skillId === 'cooking') {
         return XP / game[skillId].getRecipeCookingInterval(action)
-    } else if (skillId === 'astrology') {
+    }
+    else if (skillId === 'astrology') {
         return XP / game[skillId].getConstellationInterval(action);
-    } else if (skillId === 'archaeology') {
+    }
+    else if (skillId === 'archaeology') {
         return game[skillId].getBaseSkillXPForDigSite(action) / game[skillId].getDigSiteInterval(action);
     }
 

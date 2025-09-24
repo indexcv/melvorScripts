@@ -65,31 +65,41 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                 let priorityType = skillerStore.config[skillId].priorityType;
                 let selectedRealm = game.currentRealm.id;
                 let retArray = SKILL_ACTIONS[skillId].hasOwnProperty(selectedRealm) ? [...SKILL_ACTIONS[skillId][selectedRealm]] : [];
+
                 if (priorityType === priorityTypes.mastery.id) {
                     return retArray.filter(a => getMasteryLevel(skillId, getAction(skillId, a.action.id)) < 99)
                         .sort((a, b) => getMasteryXP(skillId, getAction(skillId, b.action.id)) - getMasteryXP(skillId, getAction(skillId, a.action.id)));
-                } else if (priorityType === priorityTypes.masteryLow.id) {
+                }
+                else if (priorityType === priorityTypes.masteryLow.id) {
                     return retArray.filter(a => getMasteryLevel(skillId, getAction(skillId, a.action.id)) < 99)
                         .sort((a, b) => getMasteryXP(skillId, getAction(skillId, a.action.id)) - getMasteryXP(skillId, getAction(skillId, b.action.id)));
-                } else if (priorityType === priorityTypes.intensity.id) {
+                }
+                else if (priorityType === priorityTypes.intensity.id) {
                     return retArray.filter(a => getAction(skillId, a.action.id).intensityPercent < 100)
                         .sort((a, b) => getAction(skillId, b.action.id).intensityPercent - getAction(skillId, a.action.id).intensityPercent);
-                } else if (priorityType === priorityTypes.intensityLow.id) {
+                }
+                else if (priorityType === priorityTypes.intensityLow.id) {
                     return retArray.filter(a => getAction(skillId, a.action.id).intensityPercent < 100)
                         .sort((a, b) => getAction(skillId, a.action.id).intensityPercent - getAction(skillId, b.action.id).intensityPercent);
-                } else if (priorityType === priorityTypes.lowestQuantity.id) {
+                }
+                else if (priorityType === priorityTypes.lowestQuantity.id) {
                     return retArray.sort((a, b) => bankQty(getProduct(skillId, a.action)) - bankQty(getProduct(skillId, b.action)));
-                } else if (priorityType === priorityTypes.bestXP.id) {
+                }
+                else if (priorityType === priorityTypes.bestXP.id) {
                     return retArray.sort((a, b) => getXPRate(skillId, getAction(skillId, b.action.id)) - getXPRate(skillId, getAction(skillId, a.action.id)));
-                } else if (priorityType === priorityTypes.sellsFor.id) {
+                }
+                else if (priorityType === priorityTypes.sellsFor.id) {
                     if (skillId === 'thieving') {
                         return retArray.sort((a, b) => b.action.currencyDrops[0].quantity - a.action.currencyDrops[0].quantity);
-                    } else if (skillId === 'herblore') {
+                    }
+                    else if (skillId === 'herblore') {
                         return retArray.sort((a, b) => b.action.potions[3].sellsFor.quantity - a.action.potions[3].sellsFor.quantity);
-                    } else {
+                    }
+                    else {
                         return retArray.sort((a, b) => b.action.product.sellsFor.quantity - a.action.product.sellsFor.quantity);
                     }
-                } else {
+                }
+                else {
                     return retArray;
                 }
             },
@@ -127,7 +137,8 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                 if (skillerStore.config[skillId][selectedRealm].disabledActions.includes(actionItemIdx)) {
                     skillerStore.config[skillId][selectedRealm].disabledActions.splice(skillerStore.config[skillId][selectedRealm].disabledActions.indexOf(actionItemIdx), 1)
                     $(`#${skillId}-actionItem-${actionItemIdx}`).fadeTo(200, 1);
-                } else {
+                }
+                else {
                     skillerStore.config[skillId][selectedRealm].disabledActions.push(actionItemIdx);
                     $(`#${skillId}-actionItem-${actionItemIdx}`).fadeTo(200, 0.25);
                 }
@@ -167,7 +178,8 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                         .filter(a => skillId === 'smithing' && !a.action.localID.includes('_Bar')
                             || skillId === 'runecrafting' && !a.action.localID.includes('_Rune'))
                         .map(a => a.idx)];
-                } else {
+                }
+                else {
                     skillerStore.config[skillId][selectedRealm].disabledActions = []
                 }
                 reDisableActions(skillId, selectedRealm);
@@ -187,7 +199,8 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                                 let items = [...generalRareItems, ...commonItems, ...areaUniqueItems, ...npcUniqueItem];
                                 return !items.some(i => game.stats.itemFindCount(i) === 0);
                             }).map(a => a.idx);
-                    } else if (skillId === 'archaeology') {
+                    }
+                    else if (skillId === 'archaeology') {
                         skillerStore.config[skillId][selectedRealm].disabledActions = SKILL_ACTIONS[skillId][selectedRealm]
                             .filter(a => {
                                 let tiny = [...a.action.artefacts.tiny.sortedDropsArray.map(i => i.item)];
@@ -198,7 +211,8 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                                 return !items.some(i => game.stats.itemFindCount(i) === 0);
                             }).map(a => a.idx);
                     }
-                } else {
+                }
+                else {
                     skillerStore.config[skillId][selectedRealm].disabledActions = [];
                 }
                 reDisableActions(skillId, selectedRealm);
