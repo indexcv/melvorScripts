@@ -7,6 +7,7 @@ let checkThreshMultiplier = settings.section('General').get('checkThreshMultipli
 
 //TODO: archaeology???????????? (const found = game.stats.itemFindCount(item);)
 //TODO: cartography???????????? catyography:L1778 mapUpgradeAction()
+//TODO: roundRobin
 function multiplyRecipeCostsAndCheckIfOwned(recipeCosts) {
     recipeCosts._items.forEach((k, v) => {
         recipeCosts.addItem(v, (k * checkThreshMultiplier) - k);
@@ -54,6 +55,7 @@ function checkAction(skillId, action) {
         return (multiplyRecipeCostsAndCheckIfOwned(game[skillId].getRecipeCosts(action))
                 || (action.nonShardItemCosts.length > 0
                     && action.nonShardItemCosts.some(i => multiplyRecipeCostsAndCheckIfOwned(game[skillId].getAltRecipeCosts(action, i)))))
+            && game.summoning.getMarkCount(action) > 0
             && isBasicUnlockedAndSameRealm;
     }
     else if (skillId === 'astrology') {
