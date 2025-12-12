@@ -3,7 +3,8 @@ const {SKILLS, priorityTypes, hasAoD, hasItA} = await loadModule('src/Consts.mjs
 const {getMasteryLevel, getMasteryXP, getXPRate, bankQty, getProduct} = await loadModule('src/Utils.mjs');
 
 let actCheckCount = 0;
-let checkThreshMultiplier = settings.section('General').get('checkThreshMultiplier') || 10;
+let checkThreshMultiplier = settings.section('General').get('checkThreshMultiplier') ?? 10;
+let enabledSkillPatches = settings.section('EnabledSkillPatches')
 
 //TODO: archaeology???????????? (const found = game.stats.itemFindCount(item);)
 //TODO: cartography???????????? catyography:L1778 mapUpgradeAction()
@@ -291,65 +292,106 @@ function patchSkill(skillId) {
     }
 }
 
-patch(Woodcutting, 'postAction').after(function () {
-    patchSkill('woodcutting')
-});
+if (enabledSkillPatches?.get('isWoodcuttingEnabled') ?? true) {
+    console.log(`%c[Skiller] Patching | Woodcutting patched`, 'color: #03a9fc');
+    patch(Woodcutting, 'postAction').after(function () {
+        patchSkill('woodcutting')
+    });
+}
 
-patch(Fishing, 'postAction').after(function () {
-    patchSkill('fishing')
-});
+if (enabledSkillPatches?.get('isFishingEnabled' ?? true)) {
+    console.log(`%c[Skiller] Patching | Fishing patched`, 'color: #03a9fc');
+    patch(Fishing, 'postAction').after(function () {
+        patchSkill('fishing')
+    });
+}
 
-patch(Firemaking, 'postAction').after(function () {
-    patchSkill('firemaking')
-});
+if (enabledSkillPatches?.get('isFiremakingEnabled') ?? true) {
+    console.log(`%c[Skiller] Patching | Firemaking patched`, 'color: #03a9fc');
+    patch(Firemaking, 'postAction').after(function () {
+        patchSkill('firemaking')
+    });
+}
 
-patch(Cooking, 'postAction').after(function () {
-    patchSkill('cooking')
-});
+if (enabledSkillPatches?.get('isCookingEnabled') ?? true) {
+    console.log(`%c[Skiller] Patching | Cooking patched`, 'color: #03a9fc');
+    patch(Cooking, 'postAction').after(function () {
+        patchSkill('cooking')
+    });
+}
 
-patch(Mining, 'postAction').after(function () {
-    patchSkill('mining')
-});
+if (enabledSkillPatches?.get('isMiningEnabled') ?? true) {
+    console.log(`%c[Skiller] Patching | Mining patched`, 'color: #03a9fc');
+    patch(Mining, 'postAction').after(function () {
+        patchSkill('mining')
+    });
+}
 
-patch(Smithing, 'postAction').after(function () {
-    patchSkill('smithing')
-});
+if (enabledSkillPatches?.get('isSmithingEnabled') ?? true) {
+    console.log(`%c[Skiller] Patching | Smithing patched`, 'color: #03a9fc');
+    patch(Smithing, 'postAction').after(function () {
+        patchSkill('smithing')
+    });
+}
 
-patch(Thieving, 'postAction').after(function () {
-    patchSkill('thieving')
-});
+if (enabledSkillPatches?.get('isThievingEnabled') ?? true) {
+    console.log(`%c[Skiller] Patching | Thieving patched`, 'color: #03a9fc');
+    patch(Thieving, 'postAction').after(function () {
+        patchSkill('thieving')
+    });
+}
 
-patch(Fletching, 'postAction').after(function () {
-    patchSkill('fletching')
-});
+if (enabledSkillPatches?.get('isFletchingEnabled') ?? true) {
+    console.log(`%c[Skiller] Patching | Fletching patched`, 'color: #03a9fc');
+    patch(Fletching, 'postAction').after(function () {
+        patchSkill('fletching')
+    });
+}
 
-patch(Crafting, 'postAction').after(function () {
-    patchSkill('crafting')
-});
+if (enabledSkillPatches?.get('isCraftingEnabled') ?? true) {
+    console.log(`%c[Skiller] Patching | Crafting patched`, 'color: #03a9fc');
+    patch(Crafting, 'postAction').after(function () {
+        patchSkill('crafting')
+    });
+}
 
-patch(Runecrafting, 'postAction').after(function () {
-    patchSkill('runecrafting')
-});
+if (enabledSkillPatches?.get('isRunecraftingEnabled') ?? true) {
+    console.log(`%c[Skiller] Patching | Runecrafting patched`, 'color: #03a9fc');
+    patch(Runecrafting, 'postAction').after(function () {
+        patchSkill('runecrafting')
+    });
+}
 
-patch(Herblore, 'postAction').after(function () {
-    patchSkill('herblore')
-});
+if (enabledSkillPatches?.get('isHerbloreEnabled') ?? true) {
+    console.log(`%c[Skiller] Patching | Herblore patched`, 'color: #03a9fc');
+    patch(Herblore, 'postAction').after(function () {
+        patchSkill('herblore')
+    });
+}
 
-patch(Summoning, 'postAction').after(function () {
-    patchSkill('summoning')
-});
+if (enabledSkillPatches?.get('isSummoningEnabled') ?? true) {
+    console.log(`%c[Skiller] Patching | Summoning patched`, 'color: #03a9fc');
+    patch(Summoning, 'postAction').after(function () {
+        patchSkill('summoning')
+    });
+}
 
-patch(Astrology, 'postAction').after(function () {
-    patchSkill('astrology')
-});
+if (enabledSkillPatches?.get('isAstrologyEnabled') ?? true) {
+    console.log(`%c[Skiller] Patching | Astrology patched`, 'color: #03a9fc');
+    patch(Astrology, 'postAction').after(function () {
+        patchSkill('astrology')
+    });
+}
 
-if (hasAoD) {
+if (hasAoD && (enabledSkillPatches?.get('isArchaeologyEnabled') ?? true)) {
+    console.log(`%c[Skiller] Patching | Archaeology patched`, 'color: #03a9fc');
     patch(Archaeology, 'postAction').after(function () {
         patchSkill('archaeology')
     });
 }
 
-if (hasItA) {
+if (hasItA && (enabledSkillPatches?.get('isHarvestingEnabled') ?? true)) {
+    console.log(`%c[Skiller] Patching | Harvesting patched`, 'color: #03a9fc');
     patch(Harvesting, 'postAction').after(function () {
         patchSkill('harvesting')
     });

@@ -33,6 +33,17 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
         hint: createElement('span', { children: ['How many actions before rechecking best action for skill, check that you have materials in bank for next x actions also. default : 10', createElement('br'), createElement('span', { className: 'text-danger', attributes: [['style', 'font-weight: bolder !important;']], text: 'NOTE Requires a reload to take effect.' })]}),
         default: 10
     });
+    //added buttons for enable/disable each skill patch
+    Object.values(SKILLS).forEach(skill => {
+        settings.section('EnabledSkillPatches').add({
+            type: 'switch',
+            label: `${skill.name}`,
+            hint: createElement('span', { children: [`Enable/Disable mod for ${skill.name} skill. default : true`, createElement('br'), createElement('span', { className: 'text-danger', attributes: [['style', 'font-weight: bolder !important;']], text: 'NOTE Requires a reload to take effect.' })]}),
+            name: `is${skill.name}Enabled`,
+            default: true
+        })
+    });
+    //DEBUG settings
     settings.section('Debug').add({
         type: 'switch',
         label: 'Show debug',
@@ -314,6 +325,10 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
         }
 
         Object.values(SKILLS).forEach(skill => {
+            if (!settings.section('EnabledSkillPatches')?.get(`is${skill.name}Enabled`)) {
+                return; // Skip to the next iteration
+            }
+            console.log(`%c[Skiller] GUI | ${skill.name} GUI added`, 'color: #03a9fc');
             $(`#${skill.id}-container div[class="skill-info"]`).after(`<div v-scope="Skiller('${skill.id}')"></div>`);
             PetiteVue.createApp({Skiller}).mount();
         });
