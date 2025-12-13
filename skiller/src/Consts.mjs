@@ -191,6 +191,11 @@ export const priorityTypes = {
         id: 'sellsFor',
         description: 'Highest sell value',
         tooltip: 'Target whatever gives the highest sell value.<br>Click items to disable/enable them'
+    },
+    roundRobin: {
+        id: 'roundRobin',
+        description: 'Round-robin',
+        tooltip: 'Round-robins all (available / craftable / unlocked) actions.<br>Click items to disable/enable them'
     }
 };
 

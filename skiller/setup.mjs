@@ -118,7 +118,7 @@ export async function setup({loadModule, settings, onCharacterLoaded, onInterfac
                 function priorityTypeFilter(priorityType) {
                     const skill = skillerStore.findSkill(skillId);
                     const selectedRealm = game.currentRealm.id;
-                    return [priorityTypes.custom, priorityTypes.bestXP].includes(priorityType)
+                    return [priorityTypes.custom, priorityTypes.bestXP, priorityTypes.roundRobin].includes(priorityType)
                         || (priorityType === priorityTypes.lowestQuantity && skill.includeQuantity)
                         || (priorityType === priorityTypes.sellsFor && skill.includeSellsFor)
                         || (skillerStore.config[skillId].hasOwnProperty(selectedRealm) && skill.hasMastery && !skillerStore.config[skillId][selectedRealm].masteryDone && [priorityTypes.mastery, priorityTypes.masteryLow].includes(priorityType))

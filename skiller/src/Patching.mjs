@@ -1,14 +1,15 @@
 const {loadModule, patch, settings} = mod.getContext(import.meta);
-const {SKILLS, priorityTypes, hasAoD, hasItA} = await loadModule('src/Consts.mjs');
+const {SKILLS, SKILL_ACTIONS, priorityTypes, hasAoD, hasItA} = await loadModule('src/Consts.mjs');
 const {getMasteryLevel, getMasteryXP, getXPRate, bankQty, getProduct} = await loadModule('src/Utils.mjs');
+const { RoundRobinManager } = await loadModule('src/RoundRobin.mjs');
 
 let actCheckCount = 0;
 let checkThreshMultiplier = settings.section('General').get('checkThreshMultiplier') ?? 10;
 let enabledSkillPatches = settings.section('EnabledSkillPatches')
+const rr = new RoundRobinManager();
 
 //TODO: archaeology???????????? (const found = game.stats.itemFindCount(item);)
 //TODO: cartography???????????? catyography:L1778 mapUpgradeAction()
-//TODO: roundRobin
 function multiplyRecipeCostsAndCheckIfOwned(recipeCosts) {
     recipeCosts._items.forEach((k, v) => {
         recipeCosts.addItem(v, (k * checkThreshMultiplier) - k);
@@ -142,6 +143,12 @@ function getBestAction(skill) {
         if (actions.length === 0) {
             skillerMod.store.setPriorityType(skillId, priorityTypes.bestXP.id)
         }
+    }
+    else if (priorityType === priorityTypes.roundRobin.id) {
+        return rr.next(skillId,
+            [...SKILL_ACTIONS[skillId][selectedRealm].map(a => a.action)],
+            game[skillId].actions.filter(thisAction => thisAction.realm.id === selectedRealm && !disabledActions.includes(thisAction) && checkAction(skillId, thisAction))
+        );
     }
 
     if (skill.returnMultiple) {

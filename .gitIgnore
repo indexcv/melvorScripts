@@ -1,9 +1,7 @@
 .idea/
 /otherMods/
 /MelvorGameFiles/
-/releases/
 /petiteVue/
 
-melvor-scripts.js
 files_reorganization_script.js
 *.zip
