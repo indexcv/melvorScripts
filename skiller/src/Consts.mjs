@@ -195,7 +195,7 @@ export const priorityTypes = {
     roundRobin: {
         id: 'roundRobin',
         description: 'Round-robin',
-        tooltip: 'Round-robins all (available / craftable / unlocked) actions.<br>Click items to disable/enable them'
+        tooltip: 'Round-robins all (craftable / unlocked) actions.<br>For this option it is recommended to increase \'Action check threshold multiplier\' value in Mod settings.<br>Click items to disable/enable them'
     }
 };
 
