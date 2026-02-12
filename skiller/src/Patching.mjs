@@ -216,7 +216,8 @@ function patchSkill(skillId) {
 
                 actCheckCount = 0;
             }
-            else if (skillId === 'mining' && (game[skillId].activeRock.currentHP === 0 || actCheckCount >= checkThresh)) {
+            //check for a new action if activeRock is depleted or if activeRock HP is over 1000 then mine for 1000 times and check for a new action
+            else if (skillId === 'mining' && (game[skillId].activeRock.currentHP === 0 || (game[skillId].activeRock.currentHP > 1000 && actCheckCount >= (game[skillId].actionInterval * 1000)))) {
                 const bestAction = getBestAction(skill);
 
                 if (bestAction !== undefined && game[skillId].activeRock.id !== bestAction.id) {
